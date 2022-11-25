@@ -1,11 +1,11 @@
 Package: alluvialtrace
-Title: What the Package Does (One Line, Title Case)
+Title: Create Traceable Alluvial Plots
 Version: 0.0.0.9000
 Authors@R: 
-    person(given = "First",
-           family = "Last",
+    person(given = "Jason",
+           family = "Dude",
            role = c("aut", "cre"),
-           email = "first.last@example.com",
+           email = "jasondude16@gmail.com",
            comment = c(ORCID = "YOUR-ORCID-ID"))
 Description: What the package does (one paragraph).
 License: `use_mit_license()`, `use_gpl3_license()` or friends to
