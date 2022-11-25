@@ -4,7 +4,7 @@
 #' @param to integer specifying end point of sequence
 #' @param length.out positive integer specifying length of curve
 #'
-#' @return
+#' @return numeric vector
 #' @export
 #'
 #' @examples

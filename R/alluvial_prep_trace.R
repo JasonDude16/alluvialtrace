@@ -1,7 +1,26 @@
-alluvial_prep_trace <- function(data, id, steps, fctr_order = steps, is.long = FALSE, values = NULL, keep_vars = FALSE, 
-                                add_flows = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model, 
+#' Title
+#'
+#' @param data
+#' @param id
+#' @param steps
+#' @param fctr_order
+#' @param is.long
+#' @param values
+#' @param keep_vars
+#' @param add_flows
+#' @param curve
+#' @param res
+#' @param model_fun
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+alluvial_prep_trace <- function(data, id, steps, fctr_order = steps, is.long = FALSE, values = NULL, keep_vars = FALSE,
+                                add_flows = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
                                 force = FALSE) {
-  
+
   .alluvial_prep(
     data = data,
     type = "trace",
@@ -18,5 +37,5 @@ alluvial_prep_trace <- function(data, id, steps, fctr_order = steps, is.long = F
     force = force,
     compute_flows = add_flows
   )
-  
+
 }

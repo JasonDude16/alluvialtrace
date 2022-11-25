@@ -1,9 +1,9 @@
-#' Title
+#' Alluvial model specification
 #'
-#' @param x
-#' @param pos
+#' @param x data frame/tibble containing position information
+#' @param pos character vector of column in df containing position information
 #'
-#' @return
+#' @return numeric vector of model specification
 #' @export
 #'
 #' @examples

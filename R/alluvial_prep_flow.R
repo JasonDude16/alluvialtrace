@@ -1,6 +1,22 @@
-alluvial_prep_flow <- function(data, steps, weights, fctr_order = steps, keep_vars = FALSE, curve = alluvial_curve(), 
+#' Title
+#'
+#' @param data
+#' @param steps
+#' @param weights
+#' @param fctr_order
+#' @param keep_vars
+#' @param curve
+#' @param res
+#' @param model_fun
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+alluvial_prep_flow <- function(data, steps, weights, fctr_order = steps, keep_vars = FALSE, curve = alluvial_curve(),
                                res = 1L, model_fun = alluvial_model, force = FALSE) {
-  
+
   .alluvial_prep(
     data = data,
     type = "flow",
@@ -17,5 +33,5 @@ alluvial_prep_flow <- function(data, steps, weights, fctr_order = steps, keep_va
     force = force,
     compute_flows = FALSE
   )
-  
+
 }
