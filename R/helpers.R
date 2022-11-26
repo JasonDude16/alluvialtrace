@@ -1,7 +1,6 @@
-.compute_props <- function(data, steps, type, n_steps, id = NULL, weights = NULL, fctr_order) {
+# .compute_props ------------------------------------------------------------------------------
 
-  # steps should always be a factor
-  data[steps] <- purrr::map(data[steps], as.factor)
+.compute_props <- function(data, steps, type, n_steps, id = NULL, weights = NULL, y_fctr_order) {
 
   # to implement the alluvial sorting algorithm we need to optimally sort levels
   # for both cases: step 1 -> step 2.1 and step 2.2 -> step 3.1, where 2.1 is optimally
@@ -11,7 +10,7 @@
     n_calcs <- (n_steps - 2) * 2 + 2
 
     steps_from <- rep(steps[-length(steps)], each = 2)
-    steps_to <- rep(lead(steps)[-length(steps)], each = 2)
+    steps_to <- rep(dplyr::lead(steps)[-length(steps)], each = 2)
 
     tmp <- paste0(rep(steps[-c(1, length(steps))], each = 2), c(".1", ".2"))
     keep <- seq(1, length(tmp), by = 2)
@@ -38,21 +37,30 @@
   ll <- list(steps_from, steps_to, order1, order2, new_nms, group)
 
   if (!is.null(weights) && type == "flow") {
-    return(.compute_flow_props(data, weights, ll, fctr_order))
+    return(.compute_flow_props(data, weights, ll, y_fctr_order))
   }
 
   if (!is.null(id) && type == "trace") {
-    return(.compute_trace_props(data, id, ll, fctr_order))
+    return(.compute_trace_props(data, id, ll, y_fctr_order))
   }
 
 }
 
-.compute_flow_props <- function(data, weights, ll, fctr_order) {
+# .compute_flow_props -------------------------------------------------------------------------
 
-  df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group, .df = data, .wt = weights) {
-    .df %>%
+.compute_flow_props <- function(data, weights, ll, y_fctr_order) {
+
+  # for each step from/to combo calculate the frequency and proportion
+  df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group) {
+
+    # each step can have different different levels,, so we first identify the levels at a given
+    # step and subset to only those levels, then fct_relevel()
+    y_from_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_from]]))]
+    y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
+
+    data %>%
       dplyr::ungroup() %>%
-      dplyr::rename(freq = .data[[.wt]]) %>%
+      dplyr::rename(freq = .data[[weights]]) %>%
       dplyr::mutate(N = sum(freq)) %>%
       dplyr::group_by(.data[[steps_from]], .data[[steps_to]]) %>%
       dplyr::summarise(prop = sum(freq) / N[1]) %>%
@@ -64,21 +72,12 @@
       ) %>%
       tidyr::separate(col = "value", into = c("y_from", "y_to"), sep = "_", remove = F) %>%
       dplyr::mutate(
-        y_from = as.factor(y_from),
-        y_to = as.factor(y_to)
+        y_from = forcats::fct_relevel(y_from, y_from_fctrs),
+        y_to = forcats::fct_relevel(y_to, y_to_fctrs)
       ) %>%
-      dplyr::arrange(desc(.data[[order1]]), desc(.data[[order2]])) %>%
+      dplyr::arrange(dplyr::desc(.data[[order1]]), dplyr::desc(.data[[order2]])) %>%
       dplyr::select(-.data[[steps_from]], -.data[[steps_to]], -value)
   })
-
-  # if (!is.null(fctr_order)) {
-  #   df <- df %>%
-  #     mutate(
-  #       y_from = forcats::fct_relevel(y_from, fctr_order),
-  #       y_to = forcats::fct_relevel(y_to, fctr_order)
-  #     ) %>%
-  #     arrange(y_from, y_to)
-  # }
 
   df <- df %>%
     dplyr::group_by(x_from) %>%
@@ -89,19 +88,27 @@
 
 }
 
-.compute_trace_props <- function(data, id, ll, fctr_order) {
+# .compute_trace_props ------------------------------------------------------------------------
 
-  df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group, .df = data, .id = id) {
-    # for each step from/to combo calculate the frequency and proportion and create a nested tibble
-    # with all ids listed in their respective step from/to category.
-    .df %>%
-      dplyr::arrange(.data[[.id]]) %>%
+.compute_trace_props <- function(data, id, ll, y_fctr_order) {
+
+  # for each step from/to combo calculate the frequency and proportion and create a nested tibble
+  # with all ids listed in their respective step from/to category.
+  df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group) {
+
+    # each step can have different different levels,, so we first identify the levels at a given
+    # step and subset to only those levels, then fct_relevel()
+    y_from_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_from]]))]
+    y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
+
+    data %>%
+      dplyr::arrange(.data[[id]]) %>%
       dplyr::mutate(N = dplyr::n()) %>%
       dplyr::group_by(.data[[steps_from]], .data[[steps_to]]) %>%
       dplyr::summarise(
         freq = dplyr::n(),
         prop = dplyr::n() / N[1],
-        {{ .id }} := list(.data[[.id]])
+        {{ id }} := list(.data[[id]])
       ) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(
@@ -111,24 +118,12 @@
       ) %>%
       tidyr::separate(col = "value", into = c("y_from", "y_to"), sep = "_", remove = F) %>%
       dplyr::mutate(
-        y_from = as.factor(y_from),
-        y_to = as.factor(y_to)
+        y_from = forcats::fct_relevel(y_from, y_from_fctrs),
+        y_to = forcats::fct_relevel(y_to, y_to_fctrs)
       ) %>%
       dplyr::arrange(desc(.data[[order1]]), desc(.data[[order2]])) %>%
       dplyr::select(-.data[[steps_from]], -.data[[steps_to]], -value)
   })
-
-  # allowing for factor reordering on the y-axis. Doesn't currently work,
-  # and will be difficult to implement because in some causes there will be
-  # multiple factor levels
-  # if (!is.null(fctr_order)) {
-  #   df <- df %>%
-  #     mutate(
-  #       y_from = forcats::fct_relevel(y_from, fctr_order),
-  #       y_to = forcats::fct_relevel(y_to, fctr_order)
-  #     ) %>%
-  #     arrange(y_from, y_to)
-  # }
 
   # add cumulative sum
   df <- df %>%
@@ -139,6 +134,8 @@
   return(df)
 
 }
+
+# .compute_lines ------------------------------------------------------------------------------
 
 .compute_lines <- function(tbl_props, type, steps, curve, n_curves = NULL, id = NULL) {
 
@@ -160,7 +157,7 @@
     dplyr::group_by(x_from) %>%
     dplyr::rename(seq_end = prop_cumsum) %>%
     dplyr::mutate(
-      seq_start = c(0, lag(seq_end)[-1]),
+      seq_start = c(0, dplyr::lag(seq_end)[-1]),
       seq_diff = seq_end - seq_start
     ) %>%
     dplyr::ungroup()
@@ -187,6 +184,8 @@
 
 }
 
+# .compute_trace_lines ------------------------------------------------------------------------
+
 .compute_trace_lines <- function(df_seq, filt_vars, curve, curve_index, id){
 
   # computing start and end points for each person
@@ -195,8 +194,12 @@
   # positions for each person by creating a sequence from seq_start to seq_end
   # that's evenly spaced by frequency - 1 for each to/from combo
   vars <- list(df_seq$seq_start, df_seq$seq_end, df_seq$seq_diff, df_seq$freq)
-  df_pos <-  dplyr::mutate(df_seq, pos = purrr::pmap(vars, ~ seq(..1, ..2, by = ..3 / (..4 - 1))))
-  df_pos <-  dplyr::mutate(df_pos, pos = ifelse(is.na(pos), seq_end, pos))
+
+  df_pos <- df_seq %>%
+    dplyr::mutate(
+      pos = purrr::pmap(vars, ~ seq(..1, ..2, by = ..3 / (..4 - 1))),
+      pos = purrr::map(pos, ~ ifelse(is.na(.x), seq_end, .x))
+    )
 
   # note that position start refers to step - 1, and position end refers to the
   # current step (x_from), which is why we use filt_vars to only compute for the
@@ -206,7 +209,7 @@
     tidyr::unnest(cols = c(id, "pos")) %>%
     dplyr::group_by(.data[[id]]) %>%
     dplyr::mutate(
-      pos_start = lag(pos),
+      pos_start = dplyr::lag(pos),
       pos_end = pos,
       pos_diff = pos - pos_start
     ) %>%
@@ -234,6 +237,8 @@
     )
 
 }
+
+# .compute_flow_lines -------------------------------------------------------------------------
 
 .compute_flow_lines <- function(df_seq, filt_vars, curve, curve_index, n_curves) {
 
@@ -279,6 +284,8 @@
 
 }
 
+# .alluvial_vars ------------------------------------------------------------------------------
+
 .alluvial_vars <- function(data, steps, curve, type, weights, id = NULL) {
 
   # creating a set of variables for passing to other functions.
@@ -309,14 +316,16 @@
   )
 }
 
-.compute_bars <- function(data, steps, type, x_pos, weights = NULL) {
+# .compute_bars -------------------------------------------------------------------------------
+
+.compute_bars <- function(data, steps, type, x_pos, y_fctr_order, weights = NULL) {
 
   if (type == "trace") {
-    bars <- .compute_trace_bars(data, steps)
+    bars <- .compute_trace_bars(data, steps, y_fctr_order)
   }
 
   if (type == "flow") {
-    bars <- .compute_flow_bars(data, steps, weights)
+    bars <- .compute_flow_bars(data, steps, y_fctr_order, weights)
   }
 
   # creating evenly spaced locations on the x-axis for plotting
@@ -330,7 +339,9 @@
   return(bars)
 }
 
-.compute_trace_bars <- function(data, steps) {
+# .compute_trace_bars -------------------------------------------------------------------------
+
+.compute_trace_bars <- function(data, steps, y_fctr_order) {
   data %>%
     tidyr::pivot_longer(
       cols = steps,
@@ -339,6 +350,7 @@
     ) %$%
     table(y_value, step) %>%
     as.data.frame() %>%
+    dplyr::mutate(y_value = forcats::fct_relevel(y_value, y_fctr_order)) %>%
     dplyr::rename(y_count = Freq) %>%
     dplyr::arrange(step, desc(y_value)) %>%
     dplyr::group_by(step) %>%
@@ -356,13 +368,16 @@
     dplyr::ungroup()
 }
 
-.compute_flow_bars <- function(data, steps, weights) {
+# .compute_flow_bars --------------------------------------------------------------------------
+
+.compute_flow_bars <- function(data, steps, y_fctr_order, weights) {
   data %>%
     tidyr::pivot_longer(
       cols = steps,
       names_to = "step",
       values_to = "y_value"
     ) %>%
+    dplyr::mutate(y_value = forcats::fct_relevel(y_value, y_fctr_order)) %>%
     dplyr::select(y_value, step, tidyr::everything()) %>%
     dplyr::rename(y_count = .data[[weights]]) %>%
     dplyr::group_by(y_value, step) %>%
@@ -389,7 +404,9 @@
   return(data)
 }
 
-.alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, fctr_order = NULL, is.long = FALSE, values = NULL,
+# .alluvial_prep ------------------------------------------------------------------------------
+
+.alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, is.long = FALSE, values = NULL,
                           keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
                           force = FALSE, compute_flows = FALSE) {
 
@@ -402,7 +419,6 @@
       dropped_vars <- setdiff(colnames(data), colnames(data[values]))
       long_dropped <- data[dropped_vars]
     }
-
     tmp <- tidyr::pivot_wider(
       data,
       id_cols = id,
@@ -411,7 +427,6 @@
       )
     steps <- unique(data[[steps]])
     data <- tmp
-
   }
 
   if (res < 1L) {
@@ -436,14 +451,22 @@
   #   }
   # }
 
-  tbl_props <- .compute_props(data, steps, type, vars$n_steps, id, weights, fctr_order)
-  tbl_lines <- .compute_lines(tbl_props, type, steps, curve, vars$n_curves, id)
-  bars <- .compute_bars(data, steps, type, vars$x_pos, weights)
+  # steps should always be a factor
+  data[steps] <- purrr::map(data[steps], as.factor)
+
+  # if user doesn't supply y factor order we'll use the default ordering
+  if (is.null(y_fctr_order)) {
+    y_fctr_order <- unique(purrr::reduce(purrr::map(data[steps], levels), c))
+  }
+
+  tbl_prop <- .compute_props(data, steps, type, vars$n_steps, id, weights, y_fctr_order)
+  tbl_line <- .compute_lines(tbl_prop, type, steps, curve, vars$n_curves, id)
+  tbl_bar <- .compute_bars(data, steps, type, vars$x_pos, y_fctr_order, weights)
 
   if (type == "trace") {
-    alluvial_traces <- tbl_lines %>%
+    alluvial_traces <- tbl_line %>%
       dplyr::mutate(
-        y_prop = model_fun(tbl_lines, "pos_start"),
+        y_prop = model_fun(tbl_line, "pos_start"),
         y_count = y_prop * vars$N
       )
 
@@ -481,10 +504,10 @@
   }
 
   if (type == "flow") {
-    alluvial_flows <- tbl_lines %>%
+    alluvial_flows <- tbl_line %>%
       dplyr::mutate(
-        ymin = model_fun(tbl_lines, "pos_start"),
-        ymax = model_fun(tbl_lines, "pos_end"),
+        ymin = model_fun(tbl_line, "pos_start"),
+        ymax = model_fun(tbl_line, "pos_end"),
       )
 
     # TODO: keep vars at flow level (not working)
@@ -511,7 +534,7 @@
       "model" = model_fun,
       "type" = type,
       "bar_width" = bar_width,
-      "bars" = bars
+      "bars" = tbl_bar
     )
   )
 
@@ -521,7 +544,7 @@
       list(
         "ID" = id,
         "traces" = alluvial_traces,
-        "trace_props" = tbl_props
+        "trace_props" = tbl_prop
         )
     )
 
@@ -535,7 +558,7 @@
       mod,
       list(
         "flows" = alluvial_flows,
-        "flow_props" = tbl_props
+        "flow_props" = tbl_prop
         )
     )
   }
@@ -544,6 +567,8 @@
 
   return(mod)
 }
+
+# .compute_plot -------------------------------------------------------------------------------
 
 .compute_plot <- function(x, bar_width = 1L, hpad = 0) {
 
@@ -574,6 +599,8 @@
   return(x)
 
 }
+
+# .alluvial_base ------------------------------------------------------------------------------
 
 .alluvial_base <- function(x, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL, y_scale = "prop",
                            bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, flow_alpha = 0.3, show.legend = TRUE,
@@ -626,10 +653,10 @@
 
   if (!is.null(labels)) {
 
-    import::from(.from = "ggplot2", "geom_text")
-    import::from(.from = "ggplot2", "geom_label")
+    geom_text <- ggplot2::geom_text
+    geom_label <- ggplot2::geom_label
 
-    geom_fun <- match.fun(paste0("geom_", labels$type))
+    geom_fun <- get(paste0("geom_", labels$type))
 
     if (is.null(labels$where$steps)) {
       labels$where$steps <- x$steps
