@@ -3,7 +3,7 @@
 #' @param data
 #' @param steps
 #' @param weights
-#' @param fctr_order
+#' @param y_fctr_order
 #' @param keep_vars
 #' @param curve
 #' @param res
@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @examples
-alluvial_prep_flow <- function(data, steps, weights, fctr_order = steps, keep_vars = FALSE, curve = alluvial_curve(),
+alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_vars = FALSE, curve = alluvial_curve(),
                                res = 1L, model_fun = alluvial_model, force = FALSE) {
 
   .alluvial_prep(
@@ -23,7 +23,7 @@ alluvial_prep_flow <- function(data, steps, weights, fctr_order = steps, keep_va
     id = NULL,
     steps = steps,
     weights = weights,
-    fctr_order = fctr_order,
+    y_fctr_order = y_fctr_order,
     is.long = FALSE,
     values = NULL,
     keep_vars = keep_vars,
