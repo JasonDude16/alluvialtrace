@@ -3,4 +3,8 @@
 export("%>%")
 export(alluvial_curve)
 export(alluvial_model)
+export(alluvial_plot)
+export(alluvial_plotly)
+export(alluvial_prep_flow)
+export(alluvial_prep_trace)
 importFrom(magrittr,"%>%")
