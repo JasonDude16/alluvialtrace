@@ -43,8 +43,6 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
   # all manipulations to model must happen prior to using highlight_key()
   x <- .compute_plot(x, bar_width, hpad)
 
-  x$traces <- plotly::highlight_key(x$traces, ~.data[[x$ID]])
-
   p <- .alluvial_base(
     x,
     col = col,
@@ -62,6 +60,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
   )
 
   gg <- plotly::ggplotly(p, tooltip = tooltip)
+  gg <- plotly::highlight_key(gg, key = tooltip)
   gg <- plotly::layout(gg, ...)
 
   plotly::highlight(gg, on = highlight_on, color = highlight_col, opacityDim = opacityDim, dynamic = dynamic)
