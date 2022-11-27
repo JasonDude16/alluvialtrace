@@ -54,7 +54,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
   # replacing traces with a crosstalk::SharedData object which allows for plotly's interactivity
   x$traces <- plotly::highlight_key(x$traces, ~.data[[x$ID]])
 
-  p <- .alluvial_base(
+  p <- .alluvial_plot_base(
     x,
     col = col,
     xlabs = xlabs,

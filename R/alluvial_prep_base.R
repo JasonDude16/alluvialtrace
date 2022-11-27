@@ -1,4 +1,34 @@
-.alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
+.alluvial_vars <- function(data, steps, curve, type, weights, id = NULL) {
+
+  # creating a set of variables for passing to other functions
+  # basically trying to do OOP in R
+  if (type == "trace") {
+    N <- nrow(unique(data[id]))
+  }
+
+  if (type == "flow") {
+    N <- sum(data[weights])
+  }
+
+  n_steps <- length(steps)
+  n_curves <- n_steps - 1
+  x_axis <- 1:(n_curves * length(curve))
+  x_pos <- c(0, (1:n_curves / n_curves) * length(x_axis))
+  data_points <- length(curve) * nrow(data) * n_curves
+
+  list(
+    "N" = N,
+    "data_points" = data_points,
+    "steps" = steps,
+    "n_steps" = n_steps,
+    "n_curves" =  n_curves,
+    "x_axis" = x_axis,
+    "x_pos" = x_pos,
+    "curve" = curve
+  )
+}
+
+.alluvial_prep_base <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
                            keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
                            force = FALSE, add_flows = FALSE) {
 

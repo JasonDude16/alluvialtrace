@@ -33,7 +33,7 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
 
   x <- .compute_plot(x, bar_width, hpad)
 
-  .alluvial_base(
+  .alluvial_plot_base(
     x,
     col = col,
     xlabs = xlabs,

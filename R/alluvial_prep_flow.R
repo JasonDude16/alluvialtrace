@@ -17,7 +17,7 @@
 alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_vars = FALSE, curve = alluvial_curve(),
                                res = 1L, model_fun = alluvial_model, force = FALSE) {
 
-  .alluvial_prep(
+  .alluvial_prep_base(
     data = data,
     type = "flow",
     id = NULL,

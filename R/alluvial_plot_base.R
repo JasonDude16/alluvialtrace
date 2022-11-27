@@ -1,4 +1,4 @@
-.alluvial_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha,
+.alluvial_plot_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha,
                            trace_alpha, flow_alpha, show.legend, auto_theme, remove_y_axis, trace_lwd, ...) {
 
   p <- ggplot2::ggplot() +
