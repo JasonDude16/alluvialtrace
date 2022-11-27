@@ -21,10 +21,12 @@ alluvial_plotly(
   bar_clrs = NULL,
   flow_clrs = NULL,
   bar_alpha = 1L,
-  flow_alpha = 0.3,
+  trace_alpha = 0.3,
+  flow_alpha = 0.7,
   show.legend = TRUE,
   auto_theme = FALSE,
   remove_y_axis = FALSE,
+  trace_lwd = 1,
   ...
 )
 }

@@ -201,7 +201,6 @@
   # positions for each person by creating a sequence from seq_start to seq_end
   # that's evenly spaced by frequency - 1 for each to/from combo
   vars <- list(df_seq$seq_start, df_seq$seq_end, df_seq$seq_diff, df_seq$freq)
-
   df_pos <- df_seq %>%
     dplyr::mutate(
       pos = purrr::pmap(vars, ~ seq(..1, ..2, by = ..3 / (..4 - 1))),
@@ -452,7 +451,7 @@
         y_count = y_prop * vars$N
       )
 
-    # flow overlay for traces ( better plotting resolution)
+    # flow overlay for traces (better plotting resolution)
     if (add_flows) {
       data_agg <- data %>%
         dplyr::group_by(across(steps)) %>%
@@ -576,9 +575,8 @@
 
 # .alluvial_base ------------------------------------------------------------------------------
 
-.alluvial_base <- function(x, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL, y_scale = "prop",
-                           bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, flow_alpha = 0.3, show.legend = TRUE,
-                           auto_theme = FALSE, remove_y_axis = FALSE, ...) {
+.alluvial_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha,
+                           trace_alpha, flow_alpha, show.legend, auto_theme, remove_y_axis, trace_lwd, ...) {
 
   p <- ggplot2::ggplot() +
     ggplot2::geom_bar(
@@ -604,8 +602,9 @@
           col = as.factor(.data[[col]]),
           group = .data[[x$ID]]
         ),
-        alpha = flow_alpha,
-        na.rm = TRUE
+        alpha = trace_alpha,
+        na.rm = TRUE,
+        lwd = trace_lwd
       )
   }
 
@@ -620,7 +619,7 @@
           group = interaction(y_from, y_to),
           fill = as.factor(.data[[col]])
         ),
-        alpha = .7
+        alpha = flow_alpha
       )
   }
 
