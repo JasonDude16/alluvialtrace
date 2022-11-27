@@ -53,17 +53,22 @@
   # for each step from/to combo calculate the frequency and proportion
   df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group) {
 
-    # each step can have different different levels,, so we first identify the levels at a given
+    # each step can have different different levels, so we first identify the levels at a given
     # step and subset to only those levels, then fct_relevel()
     y_from_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_from]]))]
     y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
 
     data %>%
-      dplyr::ungroup() %>%
       dplyr::rename(freq = .data[[weights]]) %>%
-      dplyr::mutate(N = sum(freq)) %>%
+      dplyr::mutate(
+        N = sum(freq),
+        .id = 1:nrow(.)
+      ) %>%
       dplyr::group_by(.data[[steps_from]], .data[[steps_to]]) %>%
-      dplyr::summarise(prop = sum(freq) / N[1]) %>%
+      dplyr::summarise(
+        prop = sum(freq) / N[1],
+        .id = .id[1]
+      ) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(
         value = paste(.data[[steps_from]], .data[[steps_to]], sep = "_"),
@@ -96,7 +101,7 @@
   # with all ids listed in their respective step from/to category.
   df <- purrr::pmap_dfr(ll, function(steps_from, steps_to, order1, order2, new_nms, group) {
 
-    # each step can have different different levels,, so we first identify the levels at a given
+    # each step can have different different levels, so we first identify the levels at a given
     # step and subset to only those levels, then fct_relevel()
     y_from_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_from]]))]
     y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
@@ -215,8 +220,10 @@
     ) %>%
     dplyr::ungroup() %>%
     dplyr::filter(x_from %in% filt_vars) %>%
-    dplyr::mutate(curve = list(curve),
-           curve_index = list(curve_index)) %>%
+    dplyr::mutate(
+      curve = list(curve),
+      curve_index = list(curve_index)
+    ) %>%
     tidyr::unnest(cols = c("curve", "curve_index")) %>%
     dplyr::group_by(.data[[id]]) %>%
     dplyr::mutate(x_axis = 1:dplyr::n()) %>%
@@ -279,41 +286,10 @@
       pos_diff,
       curve,
       curve_index,
-      x_axis
+      x_axis,
+      .id
     )
 
-}
-
-# .alluvial_vars ------------------------------------------------------------------------------
-
-.alluvial_vars <- function(data, steps, curve, type, weights, id = NULL) {
-
-  # creating a set of variables for passing to other functions.
-  # basically trying to do OOP in R
-  if (type == "trace") {
-    N <- nrow(unique(data[id]))
-  }
-
-  if (type == "flow") {
-    N <- sum(data[weights])
-  }
-
-  n_steps <- length(steps)
-  n_curves <- n_steps - 1
-  x_axis <- 1:(n_curves * length(curve))
-  x_pos <- c(0, (1:n_curves / n_curves) * length(x_axis))
-  data_points <- length(curve) * nrow(data) * n_curves
-
-  list(
-    "N" = N,
-    "data_points" = data_points,
-    "steps" = steps,
-    "n_steps" = n_steps,
-    "n_curves" =  n_curves,
-    "x_axis" = x_axis,
-    "x_pos" = x_pos,
-    "curve" = curve
-  )
 }
 
 # .compute_bars -------------------------------------------------------------------------------
@@ -398,10 +374,36 @@
     dplyr::ungroup()
 }
 
-.alluvial_add_vars <- function(data, id, steps, alluvial_mod) {
-  join_vars <- setdiff(colnames(data), colnames(data[steps]))
-  data <-  dplyr::left_join(alluvial_mod, data[join_vars], by = id)
-  return(data)
+# .alluvial_vars ------------------------------------------------------------------------------
+
+.alluvial_vars <- function(data, steps, curve, type, weights, id = NULL) {
+
+  # creating a set of variables for passing to other functions
+  # basically trying to do OOP in R
+  if (type == "trace") {
+    N <- nrow(unique(data[id]))
+  }
+
+  if (type == "flow") {
+    N <- sum(data[weights])
+  }
+
+  n_steps <- length(steps)
+  n_curves <- n_steps - 1
+  x_axis <- 1:(n_curves * length(curve))
+  x_pos <- c(0, (1:n_curves / n_curves) * length(x_axis))
+  data_points <- length(curve) * nrow(data) * n_curves
+
+  list(
+    "N" = N,
+    "data_points" = data_points,
+    "steps" = steps,
+    "n_steps" = n_steps,
+    "n_curves" =  n_curves,
+    "x_axis" = x_axis,
+    "x_pos" = x_pos,
+    "curve" = curve
+  )
 }
 
 # .alluvial_prep ------------------------------------------------------------------------------
@@ -413,22 +415,44 @@
   # default model comes from alluvial_model(), but can be user-supplied
   model_fun <- match.fun(model_fun)
 
-  if (is.long) {
-    if (keep_vars) {
-      steps_long <- steps
-      dropped_vars <- setdiff(colnames(data), colnames(data[values]))
-      long_dropped <- data[dropped_vars]
-    }
-    tmp <- tidyr::pivot_wider(
-      data,
-      id_cols = id,
-      names_from = steps,
-      values_from = values
+  # TODO: rewrite this because it's confusing and I think the logic is wrong
+  # convert to wide and, if user wants to keep variables, store the variables that are dropped when
+  # converting from long to wide in long_dropped. These will be merged back later.
+  if (type == "trace") {
+    if (is.long) {
+      if (keep_vars) {
+        steps_long <- steps
+        dropped_vars <- setdiff(colnames(data), colnames(data[values]))
+        long_dropped <- data[dropped_vars]
+      }
+      # convert to wide format
+      data <- tidyr::pivot_wider(
+        data,
+        id_cols = id,
+        names_from = steps,
+        values_from = values
       )
-    steps <- unique(data[[steps]])
-    data <- tmp
+      # get wide format version of steps
+      steps <- unique(data[[steps]])
+    }
   }
 
+  # add id in case we want to keep vars at flow level
+  if (type == "flow") {
+    if (!any(colnames(data) %in% ".id")) {
+      data <- data %>% mutate(.id = 1:n())
+    }
+  }
+
+  # now that we have finalized data, ensure `steps` is a factor
+  data[steps] <- purrr::map(data[steps], as.factor)
+
+  # if user doesn't supply y factor order we'll use the default ordering
+  if (is.null(y_fctr_order)) {
+    y_fctr_order <- unique(purrr::reduce(purrr::map(data[steps], levels), c))
+  }
+
+  # adjust resolution before getting alluvial vars and computing traces/flwows
   if (res < 1L) {
     down_scale <- ceiling(length(curve) * (1 - res))
     drop <- seq(2, (length(curve) - 1), length(curve) / down_scale)
@@ -437,32 +461,16 @@
 
   # getting vars *after* long format has been converted to wide and curve res has been adjusted
   vars <- .alluvial_vars(data, steps, curve, type, weights, id)
-
   if (vars$data_points > 1e5 && !force) {
     stop("Number of data points to calculate exceeeds 1e+05 (", data_points, "). Use Force = TRUE to continue.")
   }
 
-  # TODO: keep vars at flow level
-  # if (type == "flow") {
-  #   if (keep_vars) {
-  #     if (!any(colnames(data) %in% "id")) {
-  #       data <- data %>% mutate(id = 1:n())
-  #     }
-  #   }
-  # }
-
-  # steps should always be a factor
-  data[steps] <- purrr::map(data[steps], as.factor)
-
-  # if user doesn't supply y factor order we'll use the default ordering
-  if (is.null(y_fctr_order)) {
-    y_fctr_order <- unique(purrr::reduce(purrr::map(data[steps], levels), c))
-  }
-
+  # main internal function calls for computing proportions, flows/traces, and bars
   tbl_prop <- .compute_props(data, steps, type, vars$n_steps, id, weights, y_fctr_order)
   tbl_line <- .compute_lines(tbl_prop, type, steps, curve, vars$n_curves, id)
   tbl_bar <- .compute_bars(data, steps, type, vars$x_pos, y_fctr_order, weights)
 
+  # apply alluvial model to traces (default is sigmoid curve)
   if (type == "trace") {
     alluvial_traces <- tbl_line %>%
       dplyr::mutate(
@@ -470,39 +478,31 @@
         y_count = y_prop * vars$N
       )
 
-    # TODO: add flows to trace
-    if (compute_flows) {
-      data_agg <- data %>%
-        dplyr::group_by(across(steps)) %>%
-        dplyr::summarise(n = dplyr::n()) %>%
-        dplyr::ungroup()
-
-      tbl_agg_props <- .compute_props(data_agg, steps, type = "flow", vars$n_steps, weights = "n")
-      tbl_agg_lines <- .compute_lines(tbl_agg_props, type = "flow", steps, curve, vars$n_curves)
-
-      alluvial_flows <- tbl_agg_lines %>%
-        dplyr::mutate(
-          ymin = model_fun(tbl_agg_lines, "pos_start"),
-          ymax = model_fun(tbl_agg_lines, "pos_end")
-        )
-
-    }
+    # TODO: add flow overlay to trace (for better plotting resolution)
+    # if (compute_flows) {
+    #   data_agg <- data %>%
+    #     dplyr::group_by(across(steps)) %>%
+    #     dplyr::summarise(n = dplyr::n()) %>%
+    #     dplyr::ungroup()
+    #
+    #   tbl_agg_props <- .compute_props(data_agg, steps, type = "flow", vars$n_steps, weights = "n")
+    #   tbl_agg_lines <- .compute_lines(tbl_agg_props, type = "flow", steps, curve, vars$n_curves)
+    #
+    #   alluvial_flows <- tbl_agg_lines %>%
+    #     dplyr::mutate(
+    #       ymin = model_fun(tbl_agg_lines, "pos_start"),
+    #       ymax = model_fun(tbl_agg_lines, "pos_end")
+    #     )
+    # }
 
     if (keep_vars) {
-      warning("`alluvial_prep()` explodes a dataset. It is recommended to only include variables needed for plotting.")
-
-      if (is.long) {
-        alluvial_traces <- .alluvial_add_vars(long_dropped, id, steps_long, alluvial_traces)
-
-      } else {
-        alluvial_traces <- .alluvial_add_vars(data, id, steps, alluvial_traces)
-
-      }
-
+      message("`alluvial_prep()` explodes a dataset. It is recommended to only include variables needed for plotting.")
+      alluvial_traces <- dplyr::left_join(alluvial_traces, data, by = id)
     }
 
   }
 
+  # apply alluvial model to flows (default is sigmoid curve)
   if (type == "flow") {
     alluvial_flows <- tbl_line %>%
       dplyr::mutate(
@@ -510,17 +510,16 @@
         ymax = model_fun(tbl_line, "pos_end"),
       )
 
-    # TODO: keep vars at flow level (not working)
-    # if (keep_vars) {
-    #   alluvial_flows <- .alluvial_add_vars(data, id = "id", steps, alluvial_flows)
-    # }
+    # keep vars at flow level
+    if (keep_vars) {
+      alluvial_flows <- dplyr::left_join(alluvial_flows, data, by = ".id")
+    }
   }
 
   # when converting to plotly you can see the lines behind the bars, so
   # choosing bar widths that minimize how much the the lines extend behind bars.
   # the amount of line shown will depend on the bar width, number of data points
   # of the curve, horizontal padding (hpad), and number of steps.
-
   if (vars$n_steps > 3) {
     bar_width <- (length(vars$x_axis) / 14)
   } else {
