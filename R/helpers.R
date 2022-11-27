@@ -177,16 +177,6 @@
     df_pos <- .compute_flow_lines(df_seq, filt_vars, curve, curve_index, n_curves)
   }
 
-  # getting back original names
-  for (name in seq_along(unique(df_pos$x_from))) {
-    var <- unique(df_pos$x_from)[name]
-    df_pos$x_from[df_pos$x_from == var] <- steps[name]
-  }
-
-  # the last step converted the column back to a character
-  # but it should be a factor
-  df_pos <-df_pos %>% dplyr::mutate(x_from = as.factor(x_from))
-
   return(df_pos)
 
 }
