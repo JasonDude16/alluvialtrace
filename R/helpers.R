@@ -452,7 +452,7 @@
         y_count = y_prop * vars$N
       )
 
-    # TODO: add flow overlay to trace (for better plotting resolution)
+    # flow overlay for traces ( better plotting resolution)
     if (add_flows) {
       data_agg <- data %>%
         dplyr::group_by(across(steps)) %>%
@@ -564,7 +564,7 @@
     }
   }
 
-  if (x$type == "flow" || !is.null(x$flows)) {
+  if (!is.null(x$flows)) {
     for (i in seq_along(x1)) {
       x$flows$ymin <- ifelse(x$flows$x_axis > x1[i] & x$flows$x_axis < x2[i], NA, x$flows$ymin)
     }
@@ -609,7 +609,7 @@
       )
   }
 
-  if (x$type == "flow" || !is.null(x$flows)) {
+  if (!is.null(x$flows)) {
     p <- p +
       ggplot2::geom_ribbon(
         data = x$flows,
