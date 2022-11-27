@@ -24,7 +24,6 @@ alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_v
     steps = steps,
     weights = weights,
     y_fctr_order = y_fctr_order,
-    is.long = FALSE,
     values = NULL,
     keep_vars = keep_vars,
     curve = curve,

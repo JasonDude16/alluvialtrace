@@ -408,7 +408,7 @@
 
 # .alluvial_prep ------------------------------------------------------------------------------
 
-.alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, is.long = FALSE, values = NULL,
+.alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
                           keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
                           force = FALSE, compute_flows = FALSE) {
 

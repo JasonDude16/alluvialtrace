@@ -8,7 +8,7 @@ alluvial_prep_flow(
   data,
   steps,
   weights,
-  fctr_order = steps,
+  y_fctr_order = NULL,
   keep_vars = FALSE,
   curve = alluvial_curve(),
   res = 1L,
