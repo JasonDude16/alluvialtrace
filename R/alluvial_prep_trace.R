@@ -32,7 +32,7 @@ alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, values = N
     res = res,
     model_fun = model_fun,
     force = force,
-    compute_flows = add_flows
+    add_flows = add_flows
   )
 
 }

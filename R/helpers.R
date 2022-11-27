@@ -412,7 +412,7 @@
 
 .alluvial_prep <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
                           keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
-                          force = FALSE, compute_flows = FALSE) {
+                          force = FALSE, add_flows = FALSE) {
 
   # default model comes from alluvial_model(), but can be user-supplied
   model_fun <- match.fun(model_fun)
@@ -453,7 +453,7 @@
       )
 
     # TODO: add flow overlay to trace (for better plotting resolution)
-    # if (compute_flows) {
+    # if (add_flows) {
     #   data_agg <- data %>%
     #     dplyr::group_by(across(steps)) %>%
     #     dplyr::summarise(n = dplyr::n()) %>%

@@ -30,7 +30,7 @@ alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_v
     res = res,
     model_fun = model_fun,
     force = force,
-    compute_flows = FALSE
+    add_flows = FALSE
   )
 
 }
