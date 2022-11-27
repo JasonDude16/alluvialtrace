@@ -189,12 +189,13 @@
   # we already have start and end points at the group level, and we have a list
   # of ids belonging to each to/from combo, so we can create a nested list of
   # positions for each person by creating a sequence from seq_start to seq_end
-  # that's evenly spaced by frequency - 1 for each to/from combo
+  # that's evenly spaced by frequency - 1 for each to/from combo.
+  # If frequency = 1 we use seq_start
   vars <- list(df_seq$seq_start, df_seq$seq_end, df_seq$seq_diff, df_seq$freq)
   df_pos <- df_seq %>%
     dplyr::mutate(
       pos = purrr::pmap(vars, ~ seq(..1, ..2, by = ..3 / (..4 - 1))),
-      pos = purrr::map(pos, ~ ifelse(is.na(.x), seq_end, .x))
+      pos = purrr::imap(pos, ~ifelse(is.nan(.x), seq_start[.y], .x))
     )
 
   # note that position start refers to step - 1, and position end refers to the
