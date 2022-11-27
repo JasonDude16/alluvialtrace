@@ -417,14 +417,7 @@
   # default model comes from alluvial_model(), but can be user-supplied
   model_fun <- match.fun(model_fun)
 
-  # add id in case we want to keep vars at flow level
-  if (type == "flow") {
-    if (!any(colnames(data) %in% ".id")) {
-      data <- data %>% mutate(.id = 1:n())
-    }
-  }
-
-  # now that we have finalized data, ensure `steps` is a factor
+  # ensure `steps` variables are factors
   data[steps] <- purrr::map(data[steps], as.factor)
 
   # if user doesn't supply y factor order we'll use the default ordering
@@ -432,15 +425,16 @@
     y_fctr_order <- unique(purrr::reduce(purrr::map(data[steps], levels), c))
   }
 
-  # adjust resolution before getting alluvial vars and computing traces/flwows
+  # adjust resolution before getting alluvial vars and computing traces/flows
   if (res < 1L) {
     down_scale <- ceiling(length(curve) * (1 - res))
     drop <- seq(2, (length(curve) - 1), length(curve) / down_scale)
     curve <- curve[-drop]
   }
 
-  # getting vars *after* long format has been converted to wide and curve res has been adjusted
+  # creating a list of useful vars
   vars <- .alluvial_vars(data, steps, curve, type, weights, id)
+
   if (vars$data_points > 1e5 && !force) {
     stop("Number of data points to calculate exceeeds 1e+05 (", data_points, "). Use Force = TRUE to continue.")
   }
@@ -489,10 +483,12 @@
         ymin = model_fun(tbl_line, "pos_start"),
         ymax = model_fun(tbl_line, "pos_end"),
       )
-
     # keep vars at flow level
     if (keep_vars) {
-      alluvial_flows <- dplyr::left_join(alluvial_flows, data, by = ".id")
+      if (!any(colnames(data) %in% ".id")) {
+        data <- data %>% mutate(.id = 1:n())
+        alluvial_flows <- dplyr::left_join(alluvial_flows, data, by = ".id")
+      }
     }
   }
 
@@ -585,7 +581,6 @@
                            bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, flow_alpha = 0.3, show.legend = TRUE,
                            auto_theme = FALSE, remove_y_axis = FALSE, ...) {
 
-
   p <- ggplot2::ggplot() +
     ggplot2::geom_bar(
       data = x$bars,
@@ -604,7 +599,7 @@
     p <- p +
       ggplot2::geom_line(
         data = x$traces,
-        ggplot2::aes(
+        mapping = ggplot2::aes(
           x = x_axis,
           y = .data[[paste0("y_", y_scale)]],
           col = as.factor(.data[[col]]),
