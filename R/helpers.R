@@ -504,27 +504,15 @@
   )
 
   if (type == "trace") {
-    mod <- c(
-      mod,
-      list(
-        "ID" = id,
-        "traces" = alluvial_traces,
-        "trace_props" = tbl_prop
-        )
-    )
+    mod <- c(mod, list( "ID" = id, "traces" = alluvial_traces))
+
     if (add_flows) {
       mod <- c(mod, list("flows" = alluvial_flows))
     }
   }
 
   if (type == "flow") {
-    mod <- c(
-      mod,
-      list(
-        "flows" = alluvial_flows,
-        "flow_props" = tbl_prop
-        )
-    )
+    mod <- c(mod, list("flows" = alluvial_flows))
   }
 
   attr(mod, "class") <- "alluvial_model"
