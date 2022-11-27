@@ -59,6 +59,7 @@
     y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
 
     data %>%
+      dplyr::ungroup() %>%
       dplyr::rename(freq = .data[[weights]]) %>%
       dplyr::mutate(
         N = sum(freq),
@@ -107,6 +108,7 @@
     y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
 
     data %>%
+      dplyr::ungroup() %>%
       dplyr::arrange(.data[[id]]) %>%
       dplyr::mutate(N = dplyr::n()) %>%
       dplyr::group_by(.data[[steps_from]], .data[[steps_to]]) %>%
@@ -414,28 +416,6 @@
 
   # default model comes from alluvial_model(), but can be user-supplied
   model_fun <- match.fun(model_fun)
-
-  # TODO: rewrite this because it's confusing and I think the logic is wrong
-  # convert to wide and, if user wants to keep variables, store the variables that are dropped when
-  # converting from long to wide in long_dropped. These will be merged back later.
-  if (type == "trace") {
-    if (is.long) {
-      if (keep_vars) {
-        steps_long <- steps
-        dropped_vars <- setdiff(colnames(data), colnames(data[values]))
-        long_dropped <- data[dropped_vars]
-      }
-      # convert to wide format
-      data <- tidyr::pivot_wider(
-        data,
-        id_cols = id,
-        names_from = steps,
-        values_from = values
-      )
-      # get wide format version of steps
-      steps <- unique(data[[steps]])
-    }
-  }
 
   # add id in case we want to keep vars at flow level
   if (type == "flow") {
