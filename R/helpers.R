@@ -453,21 +453,21 @@
       )
 
     # TODO: add flow overlay to trace (for better plotting resolution)
-    # if (add_flows) {
-    #   data_agg <- data %>%
-    #     dplyr::group_by(across(steps)) %>%
-    #     dplyr::summarise(n = dplyr::n()) %>%
-    #     dplyr::ungroup()
-    #
-    #   tbl_agg_props <- .compute_props(data_agg, steps, type = "flow", vars$n_steps, weights = "n")
-    #   tbl_agg_lines <- .compute_lines(tbl_agg_props, type = "flow", steps, curve, vars$n_curves)
-    #
-    #   alluvial_flows <- tbl_agg_lines %>%
-    #     dplyr::mutate(
-    #       ymin = model_fun(tbl_agg_lines, "pos_start"),
-    #       ymax = model_fun(tbl_agg_lines, "pos_end")
-    #     )
-    # }
+    if (add_flows) {
+      data_agg <- data %>%
+        dplyr::group_by(across(steps)) %>%
+        dplyr::summarise(n = dplyr::n()) %>%
+        dplyr::ungroup()
+
+      tbl_agg_props <- .compute_props(data_agg, steps, "flow", vars$n_steps, id = NULL, "n", y_fctr_order)
+      tbl_agg_lines <- .compute_lines(tbl_agg_props, "flow", steps, curve, vars$n_curves, id = NULL)
+
+      alluvial_flows <- tbl_agg_lines %>%
+        dplyr::mutate(
+          ymin = model_fun(tbl_agg_lines, "pos_start"),
+          ymax = model_fun(tbl_agg_lines, "pos_end")
+        )
+    }
 
     if (keep_vars) {
       message("`alluvial_prep()` explodes a dataset. It is recommended to only include variables needed for plotting.")
@@ -522,8 +522,7 @@
         "trace_props" = tbl_prop
         )
     )
-
-    if (compute_flows) {
+    if (add_flows) {
       mod <- c(mod, list("flows" = alluvial_flows))
     }
   }
@@ -565,7 +564,7 @@
     }
   }
 
-  if (x$type == "flow") {
+  if (x$type == "flow" || !is.null(x$flows)) {
     for (i in seq_along(x1)) {
       x$flows$ymin <- ifelse(x$flows$x_axis > x1[i] & x$flows$x_axis < x2[i], NA, x$flows$ymin)
     }
@@ -610,7 +609,7 @@
       )
   }
 
-  if (x$type == "flow") {
+  if (x$type == "flow" || !is.null(x$flows)) {
     p <- p +
       ggplot2::geom_ribbon(
         data = x$flows,
