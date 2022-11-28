@@ -1,3 +1,123 @@
+#' Title
+#'
+#' @param data
+#' @param id
+#' @param steps
+#' @param y_fctr_order
+#' @param values
+#' @param keep_vars
+#' @param add_flows
+#' @param curve
+#' @param res
+#' @param model_fun
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, values = NULL, keep_vars = FALSE, add_flows = FALSE,
+                                curve = alluvial_curve(), res = 1L, model_fun = alluvial_model, force = FALSE) {
+
+  .alluvial_prep_base(
+    data = data,
+    type = "trace",
+    id = id,
+    steps = steps,
+    weights = NULL,
+    y_fctr_order = y_fctr_order,
+    values = values,
+    keep_vars = keep_vars,
+    curve = curve,
+    res = res,
+    model_fun = model_fun,
+    force = force,
+    add_flows = add_flows
+  )
+
+}
+
+
+#' Title
+#'
+#' @param data
+#' @param steps
+#' @param weights
+#' @param y_fctr_order
+#' @param keep_vars
+#' @param curve
+#' @param res
+#' @param model_fun
+#' @param force
+#'
+#' @return
+#' @export
+#'
+#' @examples
+alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_vars = FALSE, curve = alluvial_curve(),
+                               res = 1L, model_fun = alluvial_model, force = FALSE) {
+
+  .alluvial_prep_base(
+    data = data,
+    type = "flow",
+    id = NULL,
+    steps = steps,
+    weights = weights,
+    y_fctr_order = y_fctr_order,
+    values = NULL,
+    keep_vars = keep_vars,
+    curve = curve,
+    res = res,
+    model_fun = model_fun,
+    force = force,
+    add_flows = FALSE
+  )
+
+}
+
+
+#' Alluvial model specification
+#'
+#' @param x data frame/tibble containing position information
+#' @param pos character vector of column in df containing position information
+#'
+#' @return numeric vector of model specification
+#' @export
+#'
+#' @examples
+alluvial_model <- function(x, pos) {
+
+  # euler's constant
+  e <- 2.71828
+
+  # sigmoid curve model
+  with(x, ifelse(
+    pos_diff > 0,
+    pos_diff / (1 + e ^ (-curve)) + x[[pos]],
+    ifelse(
+      pos_diff < 0,
+      abs(pos_diff) / (1 + e ^ (curve)) + (x[[pos]] + pos_diff),
+      x[[pos]]
+    )
+  ))
+}
+
+
+#' Alluvial curve specification
+#'
+#' @param from integer specifying start point of sequence
+#' @param to integer specifying end point of sequence
+#' @param length.out positive integer specifying length of curve
+#'
+#' @return numeric vector
+#' @export
+#'
+#' @examples
+alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
+  seq(from = from, to = to, length.out = length.out)
+}
+
+
 .alluvial_vars <- function(data, steps, curve, type, weights, id = NULL) {
 
   # creating a set of variables for passing to other functions
@@ -27,6 +147,7 @@
     "curve" = curve
   )
 }
+
 
 .alluvial_prep_base <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
                            keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
