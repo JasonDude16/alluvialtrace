@@ -159,6 +159,16 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
   # ensure `steps` variables are factors
   data[steps] <- purrr::map(data[steps], as.factor)
 
+  # TODO: figure out how to keep vars at flow level
+  # create an id for flows in case we want to merge other vars later
+  # if (type == "flow") {
+  #   if (keep_vars) {
+  #     if (!any(colnames(data) %in% ".id")) {
+  #       data <- data %>% dplyr::mutate(.id = 1:dplyr::n())
+  #     }
+  #   }
+  # }
+
   # if user doesn't supply y factor order we'll use the default ordering
   if (is.null(y_fctr_order)) {
     y_fctr_order <- unique(purrr::reduce(purrr::map(data[steps], levels), c))
@@ -223,12 +233,20 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
         ymax = model_fun(tbl_line, "pos_end"),
       )
     # keep vars at flow level
-    if (keep_vars) {
-      if (!any(colnames(data) %in% ".id")) {
-        data <- data %>% mutate(.id = 1:n())
-        alluvial_flows <- dplyr::left_join(alluvial_flows, data, by = ".id")
-      }
-    }
+    # TODO: this does not work because data are aggregated for flows and we therefore lose information
+    # not sure how to solve this
+    # if (keep_vars) {
+    #   # create row id, aggregate data in same way as compute_props() step
+    #   tmp <- data %>%
+    #     dplyr::group_by(across(steps)) %>%
+    #     dplyr::summarise(.id = .id[1]) %>%
+    #     dplyr::arrange(
+    #       dplyr::desc(.data[[steps[1]]]),
+    #       dplyr::desc(.data[[steps[2]]])
+    #     )
+    #   # then merge
+    #   alluvial_flows <- dplyr::left_join(alluvial_flows, tmp, by = ".id")
+    # }
   }
 
   # when converting to plotly you can see the lines behind the bars, so
