@@ -13,6 +13,7 @@
 #' @param bar_alpha
 #' @param trace_alpha
 #' @param flow_alpha
+#' @param border_col
 #' @param show.legend
 #' @param auto_theme
 #' @param remove_y_axis
@@ -25,7 +26,8 @@
 #' @examples
 alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL,
                           y_scale = "prop", bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, trace_alpha = 0.3,
-                          flow_alpha = 0.7, show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE, trace_lwd = 1, ...) {
+                          flow_alpha = 0.7, border_col = "black", show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE,
+                          trace_lwd = 1, ...) {
 
   if (class(x) != "alluvial_model") {
     stop("x must be an alluvial model object. First use `alluvial_prep()`, then pass the result to `x`")
@@ -49,6 +51,7 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
     auto_theme = auto_theme,
     remove_y_axis = remove_y_axis,
     trace_lwd = trace_lwd,
+    border_col = border_col,
     ...
   )
 
@@ -75,6 +78,7 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
 #' @param bar_alpha
 #' @param trace_alpha
 #' @param flow_alpha
+#' @param border_col
 #' @param show.legend
 #' @param auto_theme
 #' @param remove_y_axis
@@ -85,11 +89,11 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
 #' @export
 #'
 #' @examples
-alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_hover", opacityDim = 0.2,
-                            dynamic = FALSE, tooltip = x$ID, bar_width = 1L, hpad = 0, col = "y_from",
-                            xlabs = NULL, labels = NULL, ggtitle = NULL, y_scale = "prop", bar_clrs = NULL,
-                            flow_clrs = NULL, bar_alpha = 1L, trace_alpha = 0.3, flow_alpha = 0.7,
-                            show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE, trace_lwd = 1, ...) {
+alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_hover", opacityDim = 0.2, dynamic = FALSE,
+                            tooltip = x$ID, bar_width = 1L, hpad = 0, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL,
+                            y_scale = "prop", bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, trace_alpha = 0.3, flow_alpha = 0.7,
+                            border_col = "black", show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE,
+                            trace_lwd = 1, ...) {
 
   if (class(x) != "alluvial_model") {
     stop("x must be an alluvial model object. First use `alluvial_prep()`, then pass the result to x")
@@ -126,7 +130,8 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     show.legend = show.legend,
     auto_theme = auto_theme,
     remove_y_axis = remove_y_axis,
-    trace_lwd = trace_lwd
+    trace_lwd = trace_lwd,
+    border_col = border_col
   )
 
   gg <- plotly::ggplotly(p, tooltip = tooltip)
@@ -168,7 +173,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
 }
 
 
-.alluvial_plot_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha,
+.alluvial_plot_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha, border_col,
                                 trace_alpha, flow_alpha, show.legend, auto_theme, remove_y_axis, trace_lwd, ...) {
 
   p <- ggplot2::ggplot() +
@@ -180,6 +185,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
         y = .data[[paste0("y_", y_scale)]],
         fill = as.factor(y_value)
       ),
+      col = border_col,
       width = x$bar_width,
       alpha = bar_alpha
     ) +
