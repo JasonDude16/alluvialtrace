@@ -54,12 +54,12 @@
     y_from_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_from]]))]
     y_to_fctrs <- y_fctr_order[y_fctr_order %in% unique(levels(data[[steps_to]]))]
 
-    data %>%
+      data %>%
       dplyr::ungroup() %>%
-      dplyr::rename(freq = .data[[weights]]) %>%
+      dplyr::rename(freq = dplyr::all_of(weights)) %>%
       dplyr::mutate(
         N = sum(freq),
-        .id = 1:nrow(.)
+        .id = dplyr::row_number()
       ) %>%
       dplyr::group_by(.data[[steps_from]], .data[[steps_to]]) %>%
       dplyr::summarise(
@@ -68,17 +68,17 @@
       ) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(
-        value = paste(.data[[steps_from]], .data[[steps_to]], sep = "_"),
+        y_from = as.character(.data[[steps_from]]),
+        y_to = as.character(.data[[steps_to]]),
         x_from = new_nms,
         group = group
       ) %>%
-      tidyr::separate(col = "value", into = c("y_from", "y_to"), sep = "_", remove = F) %>%
       dplyr::mutate(
         y_from = forcats::fct_relevel(y_from, y_from_fctrs),
         y_to = forcats::fct_relevel(y_to, y_to_fctrs)
       ) %>%
       dplyr::arrange(dplyr::desc(.data[[order1]]), dplyr::desc(.data[[order2]])) %>%
-      dplyr::select(-.data[[steps_from]], -.data[[steps_to]], -value)
+      dplyr::select(-dplyr::all_of(c(steps_from, steps_to)))
   })
 
   df <- df %>%
@@ -109,22 +109,24 @@
       dplyr::summarise(
         freq = dplyr::n(),
         prop = dplyr::n() / N[1],
-        {{ id }} := list(.data[[id]])
+        .trace_id = list(.data[[id]])
       ) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(
-        value = paste(.data[[steps_from]], .data[[steps_to]], sep = "_"),
+        y_from = as.character(.data[[steps_from]]),
+        y_to = as.character(.data[[steps_to]]),
         x_from = new_nms,
         group = group
       ) %>%
-      tidyr::separate(col = "value", into = c("y_from", "y_to"), sep = "_", remove = F) %>%
       dplyr::mutate(
         y_from = forcats::fct_relevel(y_from, y_from_fctrs),
         y_to = forcats::fct_relevel(y_to, y_to_fctrs)
       ) %>%
-      dplyr::arrange(desc(.data[[order1]]), desc(.data[[order2]])) %>%
-      dplyr::select(-.data[[steps_from]], -.data[[steps_to]], -value)
+      dplyr::arrange(dplyr::desc(.data[[order1]]), dplyr::desc(.data[[order2]])) %>%
+      dplyr::select(-dplyr::all_of(c(steps_from, steps_to)))
   })
+
+  names(df)[names(df) == ".trace_id"] <- id
 
   # add cumulative sum
   df <- df %>%

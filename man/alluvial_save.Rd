@@ -2,16 +2,20 @@
 % Please edit documentation in R/alluvial_save.R
 \name{alluvial_save}
 \alias{alluvial_save}
-\title{Title}
+\title{Save an alluvial plot}
 \usage{
 alluvial_save(p, filename, ...)
 }
 \arguments{
-\item{...}{}
+\item{p}{A \code{ggplot} or htmlwidget object.}
+
+\item{filename}{Output file path.}
+
+\item{...}{Additional arguments passed to \code{ggplot2::ggsave()} for ggplot objects.}
 }
 \value{
-
+Invisibly returns the saved object.
 }
 \description{
-Title
+Save an alluvial plot
 }

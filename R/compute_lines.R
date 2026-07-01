@@ -40,14 +40,13 @@
   # computing start and end points for each person
   # we already have start and end points at the group level, and we have a list
   # of ids belonging to each to/from combo, so we can create a nested list of
-  # positions for each person by creating a sequence from seq_start to seq_end
-  # that's evenly spaced by frequency - 1 for each to/from combo.
-  # If frequency = 1 we use seq_start
-  vars <- list(df_seq$seq_start, df_seq$seq_end, df_seq$seq_diff, df_seq$freq)
+  # positions for each person by placing ids at the midpoint of evenly spaced
+  # slots within each to/from combo. This keeps lines inside their bar segment
+  # instead of on the cumulative segment boundaries.
+  vars <- list(df_seq$seq_start, df_seq$seq_diff, df_seq$freq)
   df_pos <- df_seq %>%
     dplyr::mutate(
-      pos = purrr::pmap(vars, ~ seq(..1, ..2, by = ..3 / (..4 - 1))),
-      pos = purrr::imap(pos, ~ifelse(is.nan(.x), seq_start[.y], .x))
+      pos = purrr::pmap(vars, ~ ..1 + ((seq_len(..3) - 0.5) * ..2 / ..3))
     )
 
   # note that position start refers to step - 1, and position end refers to the
@@ -55,7 +54,7 @@
   # steps that need computing. This ultimately yields positions for step 1 -> step 2.1,
   # step 2.2 -> step 3.1, step 3.2 -> 4.1, etc.
   df_pos %>%
-    tidyr::unnest(cols = c(id, "pos")) %>%
+    tidyr::unnest(cols = dplyr::all_of(c(id, "pos"))) %>%
     dplyr::group_by(.data[[id]]) %>%
     dplyr::mutate(
       pos_start = dplyr::lag(pos),
@@ -84,7 +83,7 @@
       curve,
       curve_index,
       x_axis,
-      id
+      dplyr::all_of(id)
     )
 
 }

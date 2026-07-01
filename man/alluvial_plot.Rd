@@ -2,7 +2,7 @@
 % Please edit documentation in R/alluvial_plot.R
 \name{alluvial_plot}
 \alias{alluvial_plot}
-\title{Title}
+\title{Plot prepared alluvial data}
 \usage{
 alluvial_plot(
   x,
@@ -18,6 +18,7 @@ alluvial_plot(
   bar_alpha = 1L,
   trace_alpha = 0.3,
   flow_alpha = 0.7,
+  border_col = "black",
   show.legend = TRUE,
   auto_theme = FALSE,
   remove_y_axis = FALSE,
@@ -26,11 +27,47 @@ alluvial_plot(
 )
 }
 \arguments{
-\item{...}{}
+\item{x}{An \code{alluvial_model} object returned by \code{alluvial_prep_trace()} or \code{alluvial_prep_flow()}.}
+
+\item{bar_width}{Multiplier for the computed bar width.}
+
+\item{hpad}{Horizontal padding between bars and lines/ribbons.}
+
+\item{col}{Column name used to color traces or flows.}
+
+\item{xlabs}{Optional x-axis labels.}
+
+\item{labels}{Optional label specification list.}
+
+\item{ggtitle}{Optional plot title.}
+
+\item{y_scale}{Either \code{"prop"} for proportions or \code{"count"} for counts.}
+
+\item{bar_clrs}{Optional manual fill colors for bars.}
+
+\item{flow_clrs}{Optional manual colors for trace lines and flow ribbons.}
+
+\item{bar_alpha}{Bar opacity.}
+
+\item{trace_alpha}{Trace line opacity.}
+
+\item{flow_alpha}{Flow ribbon opacity.}
+
+\item{border_col}{Bar border color.}
+
+\item{show.legend}{Logical; show the legend.}
+
+\item{auto_theme}{Logical; apply the package's default theme.}
+
+\item{remove_y_axis}{Logical; hide y-axis text and line.}
+
+\item{trace_lwd}{Trace line width.}
+
+\item{...}{Additional arguments passed to label geoms.}
 }
 \value{
-
+A \code{ggplot} object.
 }
 \description{
-Title
+Plot prepared alluvial data
 }
