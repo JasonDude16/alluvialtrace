@@ -1,22 +1,19 @@
-#' Title
+#' Prepare trace-level alluvial data
 #'
-#' @param data
-#' @param id
-#' @param steps
-#' @param y_fctr_order
-#' @param values
-#' @param keep_vars
-#' @param add_flows
-#' @param curve
-#' @param res
-#' @param model_fun
-#' @param force
+#' @param data A data frame containing one row per traced entity.
+#' @param id Character scalar naming the entity identifier column.
+#' @param steps Character vector naming the ordered alluvial step columns.
+#' @param y_fctr_order Optional character vector giving the vertical factor order.
+#' @param keep_vars Logical; keep the original data columns on the trace output.
+#' @param add_flows Logical; add aggregated flow ribbons behind trace lines.
+#' @param curve Numeric vector used by `model_fun` to interpolate between steps.
+#' @param res Numeric value in `(0, 1]` used to down-sample `curve`.
+#' @param model_fun Function used to model the curve between step positions.
+#' @param force Logical; allow preparing more than 100,000 plotted data points.
 #'
-#' @return
+#' @return An object of class `alluvial_model`.
 #' @export
-#'
-#' @examples
-alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, values = NULL, keep_vars = FALSE, add_flows = FALSE,
+alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, keep_vars = FALSE, add_flows = FALSE,
                                 curve = alluvial_curve(), res = 1L, model_fun = alluvial_model, force = FALSE) {
 
   .alluvial_prep_base(
@@ -26,7 +23,6 @@ alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, values = N
     steps = steps,
     weights = NULL,
     y_fctr_order = y_fctr_order,
-    values = values,
     keep_vars = keep_vars,
     curve = curve,
     res = res,
@@ -38,23 +34,20 @@ alluvial_prep_trace <- function(data, id, steps, y_fctr_order = NULL, values = N
 }
 
 
-#' Title
+#' Prepare aggregated alluvial flow data
 #'
-#' @param data
-#' @param steps
-#' @param weights
-#' @param y_fctr_order
-#' @param keep_vars
-#' @param curve
-#' @param res
-#' @param model_fun
-#' @param force
+#' @param data A data frame containing one row per flow.
+#' @param steps Character vector naming the ordered alluvial step columns.
+#' @param weights Character scalar naming the frequency/weight column.
+#' @param y_fctr_order Optional character vector giving the vertical factor order.
+#' @param curve Numeric vector used by `model_fun` to interpolate between steps.
+#' @param res Numeric value in `(0, 1]` used to down-sample `curve`.
+#' @param model_fun Function used to model the curve between step positions.
+#' @param force Logical; allow preparing more than 100,000 plotted data points.
 #'
-#' @return
+#' @return An object of class `alluvial_model`.
 #' @export
-#'
-#' @examples
-alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_vars = FALSE, curve = alluvial_curve(),
+alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, curve = alluvial_curve(),
                                res = 1L, model_fun = alluvial_model, force = FALSE) {
 
   .alluvial_prep_base(
@@ -64,8 +57,7 @@ alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_v
     steps = steps,
     weights = weights,
     y_fctr_order = y_fctr_order,
-    values = NULL,
-    keep_vars = keep_vars,
+    keep_vars = FALSE,
     curve = curve,
     res = res,
     model_fun = model_fun,
@@ -83,23 +75,14 @@ alluvial_prep_flow <- function(data, steps, weights, y_fctr_order = NULL, keep_v
 #'
 #' @return numeric vector of model specification
 #' @export
-#'
-#' @examples
 alluvial_model <- function(x, pos) {
 
-  # euler's constant
-  e <- 2.71828
+  # Normalize the sigmoid so the first and last curve values land exactly on
+  # the supplied start and end positions.
+  sigmoid <- stats::plogis(x$curve)
+  sigmoid <- (sigmoid - min(sigmoid)) / (max(sigmoid) - min(sigmoid))
 
-  # sigmoid curve model
-  with(x, ifelse(
-    pos_diff > 0,
-    pos_diff / (1 + e ^ (-curve)) + x[[pos]],
-    ifelse(
-      pos_diff < 0,
-      abs(pos_diff) / (1 + e ^ (curve)) + (x[[pos]] + pos_diff),
-      x[[pos]]
-    )
-  ))
+  x[[pos]] + (x$pos_diff * sigmoid)
 }
 
 
@@ -111,8 +94,6 @@ alluvial_model <- function(x, pos) {
 #'
 #' @return numeric vector
 #' @export
-#'
-#' @examples
 alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
   seq(from = from, to = to, length.out = length.out)
 }
@@ -149,25 +130,52 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
 }
 
 
-.alluvial_prep_base <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL, values = NULL,
+.alluvial_prep_base <- function(data, type, id = NULL, steps, weights = NULL, y_fctr_order = NULL,
                            keep_vars = FALSE, curve = alluvial_curve(), res = 1L, model_fun = alluvial_model,
                            force = FALSE, add_flows = FALSE) {
 
   # default model comes from alluvial_model(), but can be user-supplied
   model_fun <- match.fun(model_fun)
+  if (!is.character(steps) || length(steps) < 2 || anyNA(steps)) {
+    stop("`steps` must be a character vector containing at least two column names.", call. = FALSE)
+  }
+  if (type == "trace" && (!is.character(id) || length(id) != 1L || is.na(id))) {
+    stop("`id` must be a single column name.", call. = FALSE)
+  }
+  if (type == "flow" && (!is.character(weights) || length(weights) != 1L || is.na(weights))) {
+    stop("`weights` must be a single column name.", call. = FALSE)
+  }
+  missing_steps <- setdiff(steps, names(data))
+  if (length(missing_steps) > 0) {
+    stop("`steps` columns were not found in `data`: ", paste(missing_steps, collapse = ", "), call. = FALSE)
+  }
+  if (length(steps) < 2) {
+    stop("`steps` must contain at least two columns.", call. = FALSE)
+  }
+  if (type == "trace" && (is.null(id) || !id %in% names(data))) {
+    stop("`id` must name a column in `data`.", call. = FALSE)
+  }
+  if (type == "trace" && anyDuplicated(data[[id]]) > 0) {
+    stop("`id` values must be unique for trace-level alluvial data.", call. = FALSE)
+  }
+  if (type == "trace" && anyNA(data[[id]])) {
+    stop("`id` values cannot contain missing values.", call. = FALSE)
+  }
+  if (type == "flow" && (is.null(weights) || !weights %in% names(data))) {
+    stop("`weights` must name a column in `data`.", call. = FALSE)
+  }
+  if (type == "flow" && (!is.numeric(data[[weights]]) || anyNA(data[[weights]]) || any(data[[weights]] < 0))) {
+    stop("`weights` must be a numeric column with non-missing, non-negative values.", call. = FALSE)
+  }
+  if (anyNA(data[steps])) {
+    stop("`steps` columns cannot contain missing values.", call. = FALSE)
+  }
+  if (!is.numeric(res) || length(res) != 1L || is.na(res) || res <= 0 || res > 1) {
+    stop("`res` must be a single numeric value in (0, 1].", call. = FALSE)
+  }
 
   # ensure `steps` variables are factors
   data[steps] <- purrr::map(data[steps], as.factor)
-
-  # TODO: figure out how to keep vars at flow level
-  # create an id for flows in case we want to merge other vars later
-  # if (type == "flow") {
-  #   if (keep_vars) {
-  #     if (!any(colnames(data) %in% ".id")) {
-  #       data <- data %>% dplyr::mutate(.id = 1:dplyr::n())
-  #     }
-  #   }
-  # }
 
   # if user doesn't supply y factor order we'll use the default ordering
   if (is.null(y_fctr_order)) {
@@ -177,7 +185,7 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
   # adjust resolution before getting alluvial vars and computing traces/flows
   if (res < 1L) {
     down_scale <- ceiling(length(curve) * (1 - res))
-    drop <- seq(2, (length(curve) - 1), length(curve) / down_scale)
+    drop <- unique(round(seq(2, (length(curve) - 1), length.out = down_scale)))
     curve <- curve[-drop]
   }
 
@@ -185,7 +193,8 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
   vars <- .alluvial_vars(data, steps, curve, type, weights, id)
 
   if (vars$data_points > 1e5 && !force) {
-    stop("Number of data points to calculate exceeeds 1e+05 (", data_points, "). Use Force = TRUE to continue.")
+    stop("Number of data points to calculate exceeds 1e+05 (", vars$data_points, "). Use `force = TRUE` to continue.",
+         call. = FALSE)
   }
 
   # main internal function calls for computing proportions, flows/traces, and bars
@@ -204,7 +213,7 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
     # flow overlay for traces (better plotting resolution)
     if (add_flows) {
       data_agg <- data %>%
-        dplyr::group_by(across(steps)) %>%
+        dplyr::group_by(dplyr::across(dplyr::all_of(steps))) %>%
         dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup()
 
@@ -213,8 +222,12 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
 
       alluvial_flows <- tbl_agg_lines %>%
         dplyr::mutate(
-          ymin = model_fun(tbl_agg_lines, "pos_start"),
-          ymax = model_fun(tbl_agg_lines, "pos_end")
+          ymin_prop = model_fun(tbl_agg_lines, "pos_start"),
+          ymax_prop = model_fun(tbl_agg_lines, "pos_end"),
+          ymin_count = ymin_prop * vars$N,
+          ymax_count = ymax_prop * vars$N,
+          ymin = ymin_prop,
+          ymax = ymax_prop
         )
     }
 
@@ -229,24 +242,13 @@ alluvial_curve <- function(from = -6, to = 6, length.out = 49) {
   if (type == "flow") {
     alluvial_flows <- tbl_line %>%
       dplyr::mutate(
-        ymin = model_fun(tbl_line, "pos_start"),
-        ymax = model_fun(tbl_line, "pos_end"),
+        ymin_prop = model_fun(tbl_line, "pos_start"),
+        ymax_prop = model_fun(tbl_line, "pos_end"),
+        ymin_count = ymin_prop * vars$N,
+        ymax_count = ymax_prop * vars$N,
+        ymin = ymin_prop,
+        ymax = ymax_prop
       )
-    # keep vars at flow level
-    # TODO: this does not work because data are aggregated for flows and we therefore lose information
-    # not sure how to solve this
-    # if (keep_vars) {
-    #   # create row id, aggregate data in same way as compute_props() step
-    #   tmp <- data %>%
-    #     dplyr::group_by(across(steps)) %>%
-    #     dplyr::summarise(.id = .id[1]) %>%
-    #     dplyr::arrange(
-    #       dplyr::desc(.data[[steps[1]]]),
-    #       dplyr::desc(.data[[steps[2]]])
-    #     )
-    #   # then merge
-    #   alluvial_flows <- dplyr::left_join(alluvial_flows, tmp, by = ".id")
-    # }
   }
 
   # when converting to plotly you can see the lines behind the bars, so

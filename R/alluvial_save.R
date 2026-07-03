@@ -1,21 +1,21 @@
-#' Title
+#' Save an alluvial plot
 #'
-#' @param p
-#' @param filename
-#' @param ...
+#' @param p A `ggplot` or htmlwidget object.
+#' @param filename Output file path.
+#' @param ... Additional arguments passed to `ggplot2::ggsave()` for ggplot objects
+#'   or `htmlwidgets::saveWidget()` for htmlwidget objects.
 #'
-#' @return
+#' @return Invisibly returns the saved object.
 #' @export
-#'
-#' @examples
 alluvial_save <- function(p, filename, ...) {
 
-  if (ggplot2::is.ggplot(p)) {
+  if (inherits(p, "ggplot")) {
     ggplot2::ggsave(filename, plot = p, ...)
 
   } else {
-    htmlwidgets::saveWidget(p, file = filename)
+    htmlwidgets::saveWidget(p, file = filename, ...)
 
   }
 
+  invisible(p)
 }

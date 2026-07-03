@@ -2,7 +2,7 @@
 % Please edit documentation in R/alluvial_plot.R
 \name{alluvial_plot}
 \alias{alluvial_plot}
-\title{Title}
+\title{Plot prepared alluvial data}
 \usage{
 alluvial_plot(
   x,
@@ -12,25 +12,92 @@ alluvial_plot(
   xlabs = NULL,
   labels = NULL,
   ggtitle = NULL,
+  ggsubtitle = NULL,
   y_scale = "prop",
   bar_clrs = NULL,
   flow_clrs = NULL,
   bar_alpha = 1L,
   trace_alpha = 0.3,
   flow_alpha = 0.7,
+  border_col = "black",
   show.legend = TRUE,
-  auto_theme = FALSE,
   remove_y_axis = FALSE,
   trace_lwd = 1,
+  title_size = 28,
+  title_bold = TRUE,
+  subtitle_size = 18,
+  subtitle_bold = FALSE,
+  label_size = 5,
+  label_bold = FALSE,
+  xlab_size = 18,
+  xlab_bold = TRUE,
+  theme_classic = FALSE,
+  center_title = FALSE,
   ...
 )
 }
 \arguments{
-\item{...}{}
+\item{x}{An \code{alluvial_model} object returned by \code{alluvial_prep_trace()} or \code{alluvial_prep_flow()}.}
+
+\item{bar_width}{Multiplier for the computed bar width.}
+
+\item{hpad}{Horizontal padding between bars and lines/ribbons.}
+
+\item{col}{Column name used to color traces or flows.}
+
+\item{xlabs}{Optional x-axis labels.}
+
+\item{labels}{Optional label specification list.}
+
+\item{ggtitle}{Optional plot title.}
+
+\item{ggsubtitle}{Optional plot subtitle.}
+
+\item{y_scale}{Either \code{"prop"} for proportions or \code{"count"} for counts.}
+
+\item{bar_clrs}{Optional manual fill colors for bars.}
+
+\item{flow_clrs}{Optional manual colors for trace lines and flow ribbons.}
+
+\item{bar_alpha}{Bar opacity.}
+
+\item{trace_alpha}{Trace line opacity.}
+
+\item{flow_alpha}{Flow ribbon opacity.}
+
+\item{border_col}{Bar border color.}
+
+\item{show.legend}{Logical; show the legend.}
+
+\item{remove_y_axis}{Logical; hide y-axis text and line.}
+
+\item{trace_lwd}{Trace line width.}
+
+\item{title_size}{Plot title font size.}
+
+\item{title_bold}{Logical; draw the plot title in bold.}
+
+\item{subtitle_size}{Plot subtitle font size.}
+
+\item{subtitle_bold}{Logical; draw the plot subtitle in bold.}
+
+\item{label_size}{Bar label font size.}
+
+\item{label_bold}{Logical; draw bar labels in bold.}
+
+\item{xlab_size}{X-axis label font size.}
+
+\item{xlab_bold}{Logical; draw x-axis labels in bold.}
+
+\item{theme_classic}{Logical; apply \code{ggplot2::theme_classic()}.}
+
+\item{center_title}{Logical; center the plot title.}
+
+\item{...}{Additional arguments passed to label geoms.}
 }
 \value{
-
+A \code{ggplot} object.
 }
 \description{
-Title
+Plot prepared alluvial data
 }

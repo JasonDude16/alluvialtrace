@@ -22,17 +22,15 @@
 .compute_trace_bars <- function(data, steps, y_fctr_order) {
   data %>%
     tidyr::pivot_longer(
-      cols = steps,
+      cols = dplyr::all_of(steps),
       names_to = "step",
       values_to = "y_value"
-    ) %$%
-    table(y_value, step) %>%
-    as.data.frame() %>%
+    ) %>%
+    dplyr::count(y_value, step, name = "y_count") %>%
     dplyr::mutate(y_value = forcats::fct_relevel(y_value, y_fctr_order)) %>%
-    dplyr::rename(y_count = Freq) %>%
-    dplyr::arrange(step, desc(y_value)) %>%
+    dplyr::arrange(step, dplyr::desc(y_value)) %>%
     dplyr::group_by(step) %>%
-    dplyr:: mutate(
+    dplyr::mutate(
       y_prop = y_count / sum(y_count),
       y_perc = paste(round(y_prop, 3) * 100, "%")
     ) %>%
@@ -49,16 +47,16 @@
 .compute_flow_bars <- function(data, steps, y_fctr_order, weights) {
   data %>%
     tidyr::pivot_longer(
-      cols = steps,
+      cols = dplyr::all_of(steps),
       names_to = "step",
       values_to = "y_value"
     ) %>%
     dplyr::mutate(y_value = forcats::fct_relevel(y_value, y_fctr_order)) %>%
     dplyr::select(y_value, step, tidyr::everything()) %>%
-    dplyr::rename(y_count = .data[[weights]]) %>%
+    dplyr::rename(y_count = dplyr::all_of(weights)) %>%
     dplyr::group_by(y_value, step) %>%
     dplyr::summarise(y_count = sum(y_count)) %>%
-    dplyr::arrange(step, desc(y_value)) %>%
+    dplyr::arrange(step, dplyr::desc(y_value)) %>%
     dplyr::group_by(step) %>%
     dplyr::mutate(
       y_prop = y_count / sum(y_count),

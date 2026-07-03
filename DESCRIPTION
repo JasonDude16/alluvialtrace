@@ -5,22 +5,26 @@ Authors@R:
     person(given = "Jason",
            family = "Dude",
            role = c("aut", "cre"),
-           email = "jasondude16@gmail.com",
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to
-    pick a license
+           email = "jasondude16@gmail.com")
+Description: Prepare and plot traceable alluvial diagrams from individual-level
+    records or pre-aggregated flow counts.
+License: MIT + file LICENSE
 URL: https://github.com/JasonDude16/alluvialtrace
 BugReports: https://github.com/JasonDude16/alluvialtrace/issues
 Imports: 
     dplyr,
     ggplot2,
+    htmlwidgets,
     magrittr,
     purrr,
-    import,
     plotly,
-    forcats
+    forcats,
+    shiny,
+    tidyr
+Suggests: 
+    testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+Config/roxygen2/version: 8.0.0
+Config/testthat/edition: 3

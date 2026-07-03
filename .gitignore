@@ -2,5 +2,6 @@
 .Rhistory
 .RData
 .DS_Store
-todo.txt
-tests/
+/todo.txt
+tests/testthat/Rplots.pdf
+inst/
