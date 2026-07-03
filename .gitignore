@@ -4,4 +4,5 @@
 .DS_Store
 /todo.txt
 tests/testthat/Rplots.pdf
-inst/
+inst/.DS_Store
+inst/todo.txt
