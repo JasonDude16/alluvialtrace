@@ -7,6 +7,7 @@
 #' @param xlabs Optional x-axis labels.
 #' @param labels Optional label specification list.
 #' @param ggtitle Optional plot title.
+#' @param ggsubtitle Optional plot subtitle.
 #' @param y_scale Either `"prop"` for proportions or `"count"` for counts.
 #' @param bar_clrs Optional manual fill colors for bars.
 #' @param flow_clrs Optional manual colors for trace lines and flow ribbons.
@@ -15,17 +16,29 @@
 #' @param flow_alpha Flow ribbon opacity.
 #' @param border_col Bar border color.
 #' @param show.legend Logical; show the legend.
-#' @param auto_theme Logical; apply the package's default theme.
+#' @param theme_classic Logical; apply `ggplot2::theme_classic()`.
 #' @param remove_y_axis Logical; hide y-axis text and line.
 #' @param trace_lwd Trace line width.
+#' @param title_size Plot title font size.
+#' @param title_bold Logical; draw the plot title in bold.
+#' @param subtitle_size Plot subtitle font size.
+#' @param subtitle_bold Logical; draw the plot subtitle in bold.
+#' @param center_title Logical; center the plot title.
+#' @param label_size Bar label font size.
+#' @param label_bold Logical; draw bar labels in bold.
+#' @param xlab_size X-axis label font size.
+#' @param xlab_bold Logical; draw x-axis labels in bold.
 #' @param ... Additional arguments passed to label geoms.
 #'
 #' @return A `ggplot` object.
 #' @export
 alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL,
+                          ggsubtitle = NULL,
                           y_scale = "prop", bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, trace_alpha = 0.3,
-                          flow_alpha = 0.7, border_col = "black", show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE,
-                          trace_lwd = 1, ...) {
+                          flow_alpha = 0.7, border_col = "black", show.legend = TRUE, remove_y_axis = FALSE,
+                          trace_lwd = 1, title_size = 28, title_bold = TRUE, subtitle_size = 18, subtitle_bold = FALSE,
+                          label_size = 5, label_bold = FALSE,
+                          xlab_size = 18, xlab_bold = TRUE, theme_classic = FALSE, center_title = FALSE, ...) {
 
   if (!inherits(x, "alluvial_model")) {
     stop("x must be an alluvial model object. First use `alluvial_prep_trace()` or `alluvial_prep_flow()`, then pass the result to `x`")
@@ -40,6 +53,7 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
     xlabs = xlabs,
     labels = labels,
     ggtitle = ggtitle,
+    ggsubtitle = ggsubtitle,
     y_scale = y_scale,
     bar_clrs = bar_clrs,
     flow_clrs = flow_clrs,
@@ -47,9 +61,18 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
     trace_alpha = trace_alpha,
     flow_alpha = flow_alpha,
     show.legend = show.legend,
-    auto_theme = auto_theme,
+    theme_classic = theme_classic,
     remove_y_axis = remove_y_axis,
     trace_lwd = trace_lwd,
+    title_size = title_size,
+    title_bold = title_bold,
+    subtitle_size = subtitle_size,
+    subtitle_bold = subtitle_bold,
+    center_title = center_title,
+    label_size = label_size,
+    label_bold = label_bold,
+    xlab_size = xlab_size,
+    xlab_bold = xlab_bold,
     border_col = border_col,
     ...
   )
@@ -61,7 +84,8 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
 #'
 #' @param x An `alluvial_model` object returned by `alluvial_prep_trace()`.
 #' @param highlight_col Highlight color.
-#' @param highlight_on Plotly event used for highlighting.
+#' @param highlight_on Plotly event used to turn highlighting on.
+#' @param highlight_off Plotly event used to turn highlighting off.
 #' @param opacityDim Opacity for non-highlighted traces.
 #' @param dynamic Logical; use dynamic highlighting.
 #' @param tooltip Tooltip fields passed to `plotly::ggplotly()`.
@@ -70,11 +94,15 @@ alluvial_plot <- function(x, bar_width = 1L, hpad = 0, col = "y_from", xlabs = N
 #'
 #' @return A `plotly` object.
 #' @export
-alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_hover", opacityDim = 0.2, dynamic = FALSE,
+alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_hover", highlight_off = "plotly_doubleclick",
+                            opacityDim = 0.2, dynamic = FALSE,
                             tooltip = x$ID, bar_width = 1L, hpad = 0, col = "y_from", xlabs = NULL, labels = NULL, ggtitle = NULL,
+                            ggsubtitle = NULL,
                             y_scale = "prop", bar_clrs = NULL, flow_clrs = NULL, bar_alpha = 1L, trace_alpha = 0.3, flow_alpha = 0.7,
-                            border_col = "black", show.legend = TRUE, auto_theme = FALSE, remove_y_axis = FALSE,
-                            trace_lwd = 1, ...) {
+                            border_col = "black", show.legend = TRUE, remove_y_axis = FALSE,
+                            trace_lwd = 1, title_size = 28, title_bold = TRUE, subtitle_size = 18, subtitle_bold = FALSE,
+                            label_size = 5, label_bold = FALSE,
+                            xlab_size = 18, xlab_bold = TRUE, theme_classic = FALSE, center_title = FALSE, ...) {
 
   if (!inherits(x, "alluvial_model")) {
     stop("x must be an alluvial model object. First use `alluvial_prep_trace()`, then pass the result to x")
@@ -105,6 +133,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     xlabs = xlabs,
     labels = labels,
     ggtitle = ggtitle,
+    ggsubtitle = ggsubtitle,
     y_scale = y_scale,
     bar_clrs = bar_clrs,
     flow_clrs = flow_clrs,
@@ -112,17 +141,113 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     trace_alpha = trace_alpha,
     flow_alpha = flow_alpha,
     show.legend = show.legend,
-    auto_theme = auto_theme,
+    theme_classic = theme_classic,
     remove_y_axis = remove_y_axis,
     trace_lwd = trace_lwd,
+    title_size = title_size,
+    title_bold = title_bold,
+    subtitle_size = subtitle_size,
+    subtitle_bold = subtitle_bold,
+    center_title = center_title,
+    label_size = label_size,
+    label_bold = label_bold,
+    xlab_size = xlab_size,
+    xlab_bold = xlab_bold,
     border_col = border_col
   )
 
   gg <- plotly::ggplotly(p, tooltip = "text")
+  if (!is.null(ggsubtitle)) {
+    gg <- plotly::layout(gg, title = list(
+      text = .plotly_title_text(ggtitle, ggsubtitle, title_bold, subtitle_bold),
+      x = if (isTRUE(center_title)) 0.5 else 0
+    ), margin = .plotly_subtitle_margin(gg))
+  }
+  gg <- .plotly_bold_display_text(gg, xlab_bold = xlab_bold, label_bold = label_bold)
   gg <- plotly::layout(gg, ...)
 
-  plotly::highlight(gg, on = highlight_on, color = highlight_col, opacityDim = opacityDim, dynamic = dynamic)
+  plotly::highlight(gg, on = highlight_on, off = highlight_off, color = highlight_col, opacityDim = opacityDim, dynamic = dynamic)
 
+}
+
+
+.plotly_title_text <- function(title, subtitle, title_bold = FALSE, subtitle_bold = FALSE) {
+  if (is.null(title)) {
+    title <- ""
+  }
+  title <- .plotly_html_escape(title)
+  subtitle <- .plotly_html_escape(subtitle)
+
+  if (isTRUE(title_bold)) {
+    title <- paste0("<b>", title, "</b>")
+  }
+  if (isTRUE(subtitle_bold)) {
+    subtitle <- paste0("<b>", subtitle, "</b>")
+  }
+
+  paste0(title, "<br><sup>", subtitle, "</sup>")
+}
+
+
+.plotly_html_escape <- function(x) {
+  x <- as.character(x)
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x
+}
+
+
+.plotly_subtitle_margin <- function(x) {
+  margin <- x$x$layout$margin
+  if (is.null(margin)) {
+    margin <- list()
+  }
+
+  top <- if (is.null(margin$t)) 0 else margin$t
+  margin$t <- max(top, 95)
+  margin
+}
+
+
+.plotly_bold_display_text <- function(x, xlab_bold = FALSE, label_bold = FALSE) {
+  if (isTRUE(xlab_bold)) {
+    x <- .plotly_bold_xlabs(x)
+  }
+  if (isTRUE(label_bold)) {
+    x <- .plotly_bold_label_traces(x)
+  }
+
+  x
+}
+
+
+.plotly_bold_xlabs <- function(x) {
+  ticktext <- x$x$layout$xaxis$ticktext
+  if (is.null(ticktext)) {
+    return(x)
+  }
+
+  x$x$layout$xaxis$ticktext <- .plotly_bold_text(ticktext)
+  x
+}
+
+
+.plotly_bold_label_traces <- function(x) {
+  for (i in seq_along(x$x$data)) {
+    trace <- x$x$data[[i]]
+    if (!is.null(trace$mode) && grepl("text", trace$mode, fixed = TRUE) && length(trace$text) > 0L) {
+      trace$text <- .plotly_bold_text(trace$text)
+      x$x$data[[i]] <- trace
+    }
+  }
+
+  x
+}
+
+
+.plotly_bold_text <- function(x) {
+  paste0("<b>", .plotly_html_escape(x), "</b>")
 }
 
 
@@ -268,8 +393,10 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
 }
 
 
-.alluvial_plot_base <- function(x, col, xlabs, labels, ggtitle, y_scale, bar_clrs, flow_clrs, bar_alpha, border_col,
-                                trace_alpha, flow_alpha, show.legend, auto_theme, remove_y_axis, trace_lwd, ...) {
+.alluvial_plot_base <- function(x, col, xlabs, labels, ggtitle, ggsubtitle, y_scale, bar_clrs, flow_clrs, bar_alpha, border_col,
+                                trace_alpha, flow_alpha, show.legend, theme_classic, remove_y_axis, trace_lwd,
+                                title_size, title_bold, subtitle_size, subtitle_bold, center_title,
+                                label_size, label_bold, xlab_size, xlab_bold, ...) {
 
   flow_col <- .flow_col(x, col)
   x$bars$.fill_key <- .fill_key("bar", x$bars$y_value)
@@ -290,7 +417,7 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
       width = x$bar_width,
       alpha = bar_alpha
     ) +
-    ggplot2::ggtitle(ggtitle)
+    ggplot2::labs(title = ggtitle, subtitle = ggsubtitle)
 
   if (x$type == "trace") {
     has_tooltip <- inherits(x$traces, "SharedData") || ".alluvial_tooltip" %in% names(x$traces)
@@ -332,7 +459,8 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
           group = interaction(x_from, y_from, y_to),
           fill = .data[[".fill_key"]]
         ),
-        alpha = flow_alpha
+        alpha = flow_alpha,
+        na.rm = TRUE
       )
   }
 
@@ -359,14 +487,18 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     }
 
     labs$y_prop <- round(labs$y_prop, 2)
+    label_col <- .label_column(labels$what)
+    labs$.label <- as.character(labs[[label_col]])
 
     p <- p + geom_fun(
       data = labs,
       ggplot2::aes(
         x = x_pos,
         y = .data[[paste0(y_scale, "_lab_pos")]],
-        label = .data[[paste0("y_", labels$what)]]
+        label = .data[[".label"]]
       ),
+      size = label_size,
+      fontface = if (isTRUE(label_bold)) "bold" else "plain",
       ...
     )
 
@@ -385,11 +517,13 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     p <- p + ggplot2::scale_x_continuous(breaks = x$x_pos, labels = x$steps)
   }
 
-  if (!is.null(flow_clrs) && !is.null(x$traces) && col %in% names(x$traces)) {
-    p <- p + ggplot2::scale_color_manual(values = .manual_color_values(x, col, flow_clrs))
+  p <- p + ggplot2::scale_y_continuous(limits = .y_scale_limits(x, y_scale), expand = c(0, 0))
+
+  if (!is.null(flow_clrs) && .trace_has_col(x$traces, col)) {
+    p <- p + ggplot2::scale_color_manual(values = .manual_color_values(x, col, flow_clrs, fill_values))
   }
 
-  if (auto_theme) {
+  if (isTRUE(theme_classic)) {
     p <- p +
       ggplot2::theme_classic() +
       ggplot2::theme(
@@ -399,17 +533,43 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
         axis.ticks.y = ggplot2::element_blank(),
         axis.title.x = ggplot2::element_blank(),
         plot.title = ggplot2::element_text(
-          hjust = 0.5,
+          hjust = if (isTRUE(center_title)) 0.5 else 0,
           vjust = .1,
           family = "Arial",
-          face = "bold",
-          size = 28
+          face = if (isTRUE(title_bold)) "bold" else "plain",
+          size = title_size
+        ),
+        plot.subtitle = ggplot2::element_text(
+          hjust = if (isTRUE(center_title)) 0.5 else 0,
+          family = "Arial",
+          face = if (isTRUE(subtitle_bold)) "bold" else "plain",
+          size = subtitle_size
         ),
         axis.text.x = ggplot2::element_text(
           family = "Arial",
-          face = "bold",
-          size = 18,
-          vjust = 3
+          face = if (isTRUE(xlab_bold)) "bold" else "plain",
+          size = xlab_size,
+          vjust = 1,
+          margin = ggplot2::margin(t = 10)
+        ),
+        plot.margin = ggplot2::margin(t = 8, r = 8, b = 14, l = 8)
+      )
+  } else {
+    p <- p +
+      ggplot2::theme(
+        plot.title = ggplot2::element_text(
+          hjust = if (isTRUE(center_title)) 0.5 else 0,
+          face = if (isTRUE(title_bold)) "bold" else "plain",
+          size = title_size
+        ),
+        plot.subtitle = ggplot2::element_text(
+          hjust = if (isTRUE(center_title)) 0.5 else 0,
+          face = if (isTRUE(subtitle_bold)) "bold" else "plain",
+          size = subtitle_size
+        ),
+        axis.text.x = ggplot2::element_text(
+          face = if (isTRUE(xlab_bold)) "bold" else "plain",
+          size = xlab_size
         )
       )
   }
@@ -419,6 +579,10 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
       axis.text.y = ggplot2::element_blank(),
       axis.line.y = ggplot2::element_blank()
     )
+  }
+
+  if (isTRUE(center_title)) {
+    p <- p + ggplot2::theme(plot.title.position = "plot")
   }
 
   # apparently legend.position only drops legends when they're also set to false in main plot
@@ -453,8 +617,8 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
     if (is.null(labels$type) || !labels$type %in% c("text", "label")) {
       stop("`labels$type` must be either \"text\" or \"label\".", call. = FALSE)
     }
-    if (is.null(labels$what) || !labels$what %in% c("prop", "count", "perc")) {
-      stop("`labels$what` must be one of \"prop\", \"count\", or \"perc\".", call. = FALSE)
+    if (is.null(labels$what) || !labels$what %in% c("level", "prop", "count", "perc")) {
+      stop("`labels$what` must be one of \"level\", \"prop\", \"count\", or \"perc\".", call. = FALSE)
     }
     if (is.null(labels$where)) {
       labels$where <- "all"
@@ -465,6 +629,15 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
   }
   .validate_palette(bar_clrs, "bar_clrs")
   .validate_palette(flow_clrs, "flow_clrs")
+}
+
+
+.label_column <- function(what) {
+  if (identical(what, "level")) {
+    return("y_value")
+  }
+
+  paste0("y_", what)
 }
 
 
@@ -519,12 +692,22 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
 }
 
 
+.y_scale_limits <- function(x, y_scale) {
+  if (y_scale == "prop") {
+    return(c(0, 1))
+  }
+
+  c(0, x$N)
+}
+
+
 .manual_fill_values <- function(x, bar_clrs, flow_clrs) {
   bar_keys <- unique(x$bars$.fill_key)
   flow_keys <- if (!is.null(x$flows)) unique(x$flows$.fill_key) else character()
+  value_order <- unique(.fill_label(c(bar_keys, flow_keys)))
   values <- c(
-    .palette_for_keys(bar_clrs, bar_keys, "bar_clrs"),
-    .palette_for_keys(flow_clrs, flow_keys, "flow_clrs")
+    .palette_for_keys(bar_clrs, bar_keys, "bar_clrs", value_order),
+    .palette_for_keys(flow_clrs, flow_keys, "flow_clrs", value_order)
   )
   if (length(values) == 0L) {
     return(NULL)
@@ -533,34 +716,60 @@ alluvial_plotly <- function(x, highlight_col = "black", highlight_on = "plotly_h
 }
 
 
-.manual_color_values <- function(x, col, flow_clrs) {
-  if (is.null(flow_clrs) || is.null(x$traces) || !col %in% names(x$traces)) {
+.manual_color_values <- function(x, col, flow_clrs, fill_values = NULL) {
+  if (is.null(flow_clrs) || !.trace_has_col(x$traces, col)) {
     return(flow_clrs)
   }
-  trace_values <- unique(as.character(x$traces[[col]]))
-  .palette_for_values(flow_clrs, trace_values, "flow_clrs")
+  trace_values <- unique(as.character(.trace_data(x$traces)[[col]]))
+  value_order <- .manual_color_order(trace_values, fill_values)
+  .palette_for_values(flow_clrs, trace_values, "flow_clrs", value_order)
 }
 
 
-.palette_for_keys <- function(colors, keys, arg) {
+.trace_has_col <- function(traces, col) {
+  !is.null(traces) && col %in% names(.trace_data(traces))
+}
+
+
+.trace_data <- function(traces) {
+  if (inherits(traces, "SharedData")) {
+    return(traces$data())
+  }
+
+  traces
+}
+
+
+.manual_color_order <- function(trace_values, fill_values) {
+  if (is.null(fill_values)) {
+    return(trace_values)
+  }
+
+  fill_order <- unique(.fill_label(names(fill_values)))
+  unique(c(fill_order[fill_order %in% trace_values], trace_values))
+}
+
+
+.palette_for_keys <- function(colors, keys, arg, value_order = .fill_label(keys)) {
   if (is.null(colors) || length(keys) == 0L) {
     return(character())
   }
-  values <- .palette_for_values(colors, .fill_label(keys), arg)
+  values <- .palette_for_values(colors, .fill_label(keys), arg, value_order)
   names(values) <- keys
   values
 }
 
 
-.palette_for_values <- function(colors, values, arg) {
+.palette_for_values <- function(colors, values, arg, value_order = values) {
   values <- as.character(values)
   if (is.null(names(colors))) {
-    if (length(colors) < length(values)) {
-      stop("`", arg, "` must provide at least ", length(values), " colors.", call. = FALSE)
+    value_order <- unique(as.character(value_order))
+    if (length(colors) < length(value_order)) {
+      stop("`", arg, "` must provide at least ", length(value_order), " colors.", call. = FALSE)
     }
-    colors <- colors[seq_along(values)]
-    names(colors) <- values
-    return(colors)
+    color_map <- colors[seq_along(value_order)]
+    names(color_map) <- value_order
+    return(color_map[values])
   }
 
   missing_values <- setdiff(values, names(colors))

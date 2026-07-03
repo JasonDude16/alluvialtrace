@@ -3,3 +3,5 @@
 .RData
 .DS_Store
 /todo.txt
+tests/testthat/Rplots.pdf
+inst/

@@ -26,6 +26,10 @@ test_that("flow models prepare and plot on prop and count scales", {
   expect_no_error(ggplot2::ggplot_build(prop_plot))
   expect_no_error(ggplot2::ggplot_build(count_plot))
   expect_s3_class(prop_plot$scales$get_scales("x"), "ScaleContinuousPosition")
+  expect_equal(prop_plot$scales$get_scales("y")$limits, c(0, 1))
+  expect_equal(prop_plot$scales$get_scales("y")$expand, c(0, 0))
+  expect_equal(count_plot$scales$get_scales("y")$limits, c(0, model$N))
+  expect_equal(count_plot$scales$get_scales("y")$expand, c(0, 0))
 })
 
 test_that("flow ribbons are hidden consistently behind bars", {
@@ -75,6 +79,28 @@ test_that("flow plot supports separate bar and ribbon palettes", {
   )
 
   expect_no_error(ggplot2::ggplot_build(p))
+})
+
+test_that("unnamed palettes map shared bar and flow labels to the same colors", {
+  model <- alluvial_prep_flow(as.data.frame(UCBAdmissions), c("Admit", "Gender", "Dept"), "Freq")
+  plotted <- alluvialtrace:::.compute_plot(model)
+  flow_col <- alluvialtrace:::.flow_col(plotted, "y_from")
+  plotted$bars$.fill_key <- alluvialtrace:::.fill_key("bar", plotted$bars$y_value)
+  plotted$flows$.fill_key <- alluvialtrace:::.fill_key("flow", plotted$flows[[flow_col]])
+  clrs <- c(
+    "#111111", "#222222", "#333333", "#444444", "#555555",
+    "#666666", "#777777", "#888888", "#999999", "#aaaaaa"
+  )
+
+  fill_values <- alluvialtrace:::.manual_fill_values(plotted, clrs, clrs)
+  bar_values <- alluvialtrace:::.fill_label(names(fill_values)[startsWith(names(fill_values), "bar::")])
+  flow_values <- alluvialtrace:::.fill_label(names(fill_values)[startsWith(names(fill_values), "flow::")])
+  common_values <- intersect(bar_values, flow_values)
+
+  expect_true(length(common_values) > 0)
+  for (value in common_values) {
+    expect_equal(fill_values[[paste0("bar::", value)]], fill_values[[paste0("flow::", value)]])
+  }
 })
 
 test_that("flow values can contain underscores", {

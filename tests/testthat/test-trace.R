@@ -28,6 +28,10 @@ test_that("trace models prepare and plot with flow overlays", {
   expect_no_error(ggplot2::ggplot_build(prop_plot))
   expect_no_error(ggplot2::ggplot_build(count_plot))
   expect_s3_class(prop_plot$scales$get_scales("x"), "ScaleContinuousPosition")
+  expect_equal(prop_plot$scales$get_scales("y")$limits, c(0, 1))
+  expect_equal(prop_plot$scales$get_scales("y")$expand, c(0, 0))
+  expect_equal(count_plot$scales$get_scales("y")$limits, c(0, model$N))
+  expect_equal(count_plot$scales$get_scales("y")$expand, c(0, 0))
 })
 
 test_that("labels support all bars and validate label specs", {
@@ -67,6 +71,60 @@ test_that("plotly traces include explicit tooltips", {
   expect_s3_class(p, "plotly")
   expect_true(any(grepl("patient_id:", texts, fixed = TRUE)))
   expect_error(alluvial_plotly(model, tooltip = "missing"), "`tooltip`")
+})
+
+test_that("plotly trace colors use the same manual palette as bars", {
+  data("alluvialtrace_patient", package = "alluvialtrace")
+  model <- alluvial_prep_trace(
+    alluvialtrace_patient,
+    id = "patient_id",
+    steps = c("baseline", "month_1", "month_3"),
+    add_flows = TRUE
+  )
+  clrs <- c("#111111", "#222222", "#333333", "#444444")
+
+  p <- alluvial_plotly(model, bar_clrs = clrs, flow_clrs = clrs, col = "y_from")
+  plotly_data <- p$x$data
+  bar_layers <- plotly_data[vapply(plotly_data, function(x) identical(x$type, "bar"), logical(1))]
+  line_layers <- plotly_data[vapply(plotly_data, function(x) identical(x$type, "scatter"), logical(1))]
+
+  bar_colors <- stats::setNames(
+    vapply(bar_layers, function(x) sub(",1\\)$", "", sub("^\\(bar::", "", x$name)), character(1)),
+    vapply(bar_layers, function(x) sub(",1\\)$", "", sub("^\\(bar::", "", x$name)), character(1))
+  )
+  bar_colors[] <- vapply(bar_layers, function(x) sub(",1\\)$", "", sub("^rgba\\((.*),1\\)$", "\\1", x$marker$color)), character(1))
+
+  for (line in line_layers) {
+    line_name <- sub(",1\\)$", "", sub("^\\(", "", line$name))
+    line_color <- sub(",0\\.3\\)$", "", sub("^rgba\\((.*),0\\.3\\)$", "\\1", line$line$color))
+    expect_equal(line_color, bar_colors[[line_name]])
+  }
+})
+
+test_that("unnamed palettes map shared bar and trace labels to the same colors", {
+  data("alluvialtrace_patient", package = "alluvialtrace")
+  model <- alluvial_prep_trace(
+    alluvialtrace_patient,
+    id = "patient_id",
+    steps = c("baseline", "month_1", "month_3"),
+    add_flows = TRUE
+  )
+  plotted <- alluvialtrace:::.compute_plot(model)
+  flow_col <- alluvialtrace:::.flow_col(plotted, "y_from")
+  plotted$bars$.fill_key <- alluvialtrace:::.fill_key("bar", plotted$bars$y_value)
+  plotted$flows$.fill_key <- alluvialtrace:::.fill_key("flow", plotted$flows[[flow_col]])
+  clrs <- c("#111111", "#222222", "#333333", "#444444")
+
+  fill_values <- alluvialtrace:::.manual_fill_values(plotted, clrs, clrs)
+  color_values <- alluvialtrace:::.manual_color_values(plotted, "y_from", clrs, fill_values)
+  bar_values <- alluvialtrace:::.fill_label(names(fill_values)[startsWith(names(fill_values), "bar::")])
+  trace_values <- names(color_values)
+  common_values <- intersect(bar_values, trace_values)
+
+  expect_true(length(common_values) > 0)
+  for (value in common_values) {
+    expect_equal(fill_values[[paste0("bar::", value)]], color_values[[value]])
+  }
 })
 
 test_that("trace positions are centered within slots", {

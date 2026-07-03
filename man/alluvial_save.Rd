@@ -11,7 +11,8 @@ alluvial_save(p, filename, ...)
 
 \item{filename}{Output file path.}
 
-\item{...}{Additional arguments passed to \code{ggplot2::ggsave()} for ggplot objects.}
+\item{...}{Additional arguments passed to \code{ggplot2::ggsave()} for ggplot objects
+or \code{htmlwidgets::saveWidget()} for htmlwidget objects.}
 }
 \value{
 Invisibly returns the saved object.

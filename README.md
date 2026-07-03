@@ -40,8 +40,9 @@ trace_model <- alluvial_prep_trace(
 alluvial_plot(
   trace_model,
   col = "arm",
-  auto_theme = TRUE,
+  theme_classic = TRUE,
   remove_y_axis = TRUE,
+  center_title = TRUE,
   ggtitle = "Patient status over time"
 )
 ```
@@ -71,8 +72,9 @@ flow_model <- alluvial_prep_flow(
 alluvial_plot(
   flow_model,
   y_scale = "count",
-  auto_theme = TRUE,
-  remove_y_axis = TRUE
+  theme_classic = TRUE,
+  remove_y_axis = TRUE,
+  center_title = TRUE
 )
 ```
 
@@ -82,13 +84,55 @@ Bars and ribbons use the same scale.
 ## Interactive traces
 
 `alluvial_plotly()` supports interactive highlighting for trace-level models.
+See the live demo at <https://jasondude16.github.io/alluvialtrace/>.
 
 ```r
+motor_file <- system.file("extdata", "motor.RDS", package = "alluvialtrace")
+data <- readRDS(motor_file)
+data$Case <- stringr::str_replace(data$Case, "Case", "")
+steps <- colnames(data)[1:4]
+
+clrs <- c("#4F8CB7", "#4ead3b", "#b063c7", "#f09516", "#f25746")
+xlabs <- c("BL", "24 Hours", "7-10 Days", "90 Days")
+labels <- list(
+  "type" = "text",
+  "what" = "level",
+  "where" = list("steps" = "Motor.Arm.Affected.BL", "values" = 0:4)
+)
+
+motor_traces <- alluvial_prep_trace(data, "Case", steps, add_flows = T, keep_vars = T)
+
 alluvial_plotly(
-  trace_model,
-  col = "arm",
-  tooltip = c("patient_id", "arm", "risk")
+  motor_traces,
+  bar_clrs = rev(clrs),
+  flow_clrs = rev(clrs),
+  xlabs = xlabs,
+  show.legend = FALSE,
+  bar_width = 0.8,
+  border_col = NA,
+  hpad = 0,
+  ggtitle = "Motor Arm",
+  remove_y_axis = T,
+  bar_alpha = 0.9,
+  labels = labels,
+  trace_alpha = .2,
+  flow_alpha = .3,
+  trace_lwd = 0.5,
+  ggsubtitle = "(most affected arm)",
+  title_bold = TRUE,
+  xlab_bold = TRUE,
+  subtitle_bold = TRUE,
+  center_title = TRUE,
+  theme_classic = TRUE,
+  label_bold = FALSE,
+  opacityDim = 1
 )
 ```
 
 Flow-level plotly output is not currently supported.
+
+The GitHub Pages demo can be regenerated with:
+
+```r
+source("inst/dev/build_github_pages.R")
+```

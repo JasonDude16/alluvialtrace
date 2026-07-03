@@ -19,6 +19,7 @@ Imports:
     purrr,
     plotly,
     forcats,
+    shiny,
     tidyr
 Suggests: 
     testthat (>= 3.0.0)

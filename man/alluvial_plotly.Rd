@@ -8,6 +8,7 @@ alluvial_plotly(
   x,
   highlight_col = "black",
   highlight_on = "plotly_hover",
+  highlight_off = "plotly_doubleclick",
   opacityDim = 0.2,
   dynamic = FALSE,
   tooltip = x$ID,
@@ -17,6 +18,7 @@ alluvial_plotly(
   xlabs = NULL,
   labels = NULL,
   ggtitle = NULL,
+  ggsubtitle = NULL,
   y_scale = "prop",
   bar_clrs = NULL,
   flow_clrs = NULL,
@@ -25,9 +27,18 @@ alluvial_plotly(
   flow_alpha = 0.7,
   border_col = "black",
   show.legend = TRUE,
-  auto_theme = FALSE,
   remove_y_axis = FALSE,
   trace_lwd = 1,
+  title_size = 28,
+  title_bold = TRUE,
+  subtitle_size = 18,
+  subtitle_bold = FALSE,
+  label_size = 5,
+  label_bold = FALSE,
+  xlab_size = 18,
+  xlab_bold = TRUE,
+  theme_classic = FALSE,
+  center_title = FALSE,
   ...
 )
 }
@@ -36,7 +47,9 @@ alluvial_plotly(
 
 \item{highlight_col}{Highlight color.}
 
-\item{highlight_on}{Plotly event used for highlighting.}
+\item{highlight_on}{Plotly event used to turn highlighting on.}
+
+\item{highlight_off}{Plotly event used to turn highlighting off.}
 
 \item{opacityDim}{Opacity for non-highlighted traces.}
 
@@ -56,6 +69,8 @@ alluvial_plotly(
 
 \item{ggtitle}{Optional plot title.}
 
+\item{ggsubtitle}{Optional plot subtitle.}
+
 \item{y_scale}{Either \code{"prop"} for proportions or \code{"count"} for counts.}
 
 \item{bar_clrs}{Optional manual fill colors for bars.}
@@ -72,11 +87,29 @@ alluvial_plotly(
 
 \item{show.legend}{Logical; show the legend.}
 
-\item{auto_theme}{Logical; apply the package's default theme.}
-
 \item{remove_y_axis}{Logical; hide y-axis text and line.}
 
 \item{trace_lwd}{Trace line width.}
+
+\item{title_size}{Plot title font size.}
+
+\item{title_bold}{Logical; draw the plot title in bold.}
+
+\item{subtitle_size}{Plot subtitle font size.}
+
+\item{subtitle_bold}{Logical; draw the plot subtitle in bold.}
+
+\item{label_size}{Bar label font size.}
+
+\item{label_bold}{Logical; draw bar labels in bold.}
+
+\item{xlab_size}{X-axis label font size.}
+
+\item{xlab_bold}{Logical; draw x-axis labels in bold.}
+
+\item{theme_classic}{Logical; apply \code{ggplot2::theme_classic()}.}
+
+\item{center_title}{Logical; center the plot title.}
 
 \item{...}{Additional arguments passed to \code{plotly::layout()}.}
 }
